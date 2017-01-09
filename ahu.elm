@@ -1,43 +1,116 @@
--- module Hello exposing (..)
-
--- import Html exposing (text)
-
--- main =
---     text "Hello"
-
-
-
--- Read more about this program in the official Elm guide:
--- https://guide.elm-lang.org/architecture/user_input/buttons.html
+module Ahu exposing (..)
 
 import Html exposing (Html, div, button, text, label)
 import Html.Events exposing (onClick)
 import Html.Attributes exposing (style, placeholder)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
-
--- type alias Model = Int
-
-type alias Model = {sa_t : Int,
-                        cfm : Int,
-                        oa_t : Int,
-                        oa_wb : Int,
-                        tons : Int,
-                        shf : Float,
-                        speed : Int
-                   }
+import Time exposing (Time, second)
 
 main =
-  Html.beginnerProgram { model = {
-                                 sa_t = 62,
-                                 cfm = 30000,
-                                 oa_t = 90,
-                                 oa_wb = 84,
-                                 tons = 65,
-                                 shf = 0.90,
-                                 speed = 5
-                             },
-                             view = view, update = update }
+  Html.program { init = init
+               , update = update
+               , subscriptions = subscriptions
+               , view = view
+               }
+
+
+type alias Model = { sa_t : Int
+                   , oa_p : Int
+                   , cfm : Int
+                   , oa_t : Int
+                   , oa_wb : Int
+                   , tons : Int
+                   , shf : Float
+                   , speed : Int
+                   , time : Float
+                   , room_t : Float
+                   , room_h : Float
+                   }
+
+init : (Model, Cmd Msg)
+init = (
+        { sa_t = 62
+        , oa_p = 50
+        , cfm = 30000
+        , oa_t = 90
+        , oa_wb = 84
+        , tons = 65
+        , shf = 0.90
+        , speed = 5
+        , time = 0
+        , room_t = 60
+        , room_h = 0.015
+        }
+       , Cmd.none)
+
+type Msg = IncrementOap (Model->Int) Int
+         | IncrementSat (Model->Int) Int
+         | IncrementCfm (Model->Int) Int
+         | IncrementOat (Model->Int) Int
+         | IncrementOawb (Model->Int) Int
+         | IncrementTons (Model->Int) Int
+         | IncrementShf (Model->Float) Float
+         | IncrementSpeed (Model->Int) Int
+         | Tick Time
+
+time_mod : Time -> Float
+time_mod time =
+    let
+        t = Time.inSeconds time
+    in
+        t - 12*(toFloat (floor(t/12)))
+
+update : Msg -> Model -> (Model, Cmd Msg)
+update msg model =
+    let
+        new_model = case msg of
+                        IncrementOap f dd -> { model | oa_p = f model + dd}
+                        IncrementSat f dd -> { model | sa_t = f model + dd}
+                        IncrementCfm f dd -> { model | cfm = f model + dd}
+                        IncrementOat f dd -> { model | oa_t = f model + dd}
+                        IncrementOawb f dd -> { model | oa_wb = f model + dd}
+                        IncrementTons f dd -> { model | tons = f model + dd}
+                        IncrementShf f dd -> { model | shf = f model + dd}
+                        IncrementSpeed f dd -> { model | speed = f model + dd}
+                        Tick newTime -> { model | time = time_mod newTime}
+    in
+        (new_model, Cmd.none)
+
+subscriptions : Model -> Sub Msg
+subscriptions model = Time.every (0.1 * second) Tick
+
+view : Model -> Html Msg
+view model =
+    let
+        pro_x = 150.0
+        pro_y = 30
+    in
+  div []
+      [ Html.text "Adjust system"
+      , div [blueStyle]
+          [ control IncrementOap .oa_p 5 "OA %" model
+          , control IncrementSat .sa_t 1 "SA T" model
+          , control IncrementCfm .cfm 1000 "CFM" model
+          ]
+      , Html.text "Adjust weather"
+      , div [redStyle]
+          [ control IncrementOat .oa_t 1 "OA T" model
+          , control IncrementOawb .oa_wb 3 "OA WB" model
+          ]
+      , Html.text "Adjust load"
+      , div [grayStyle]
+          [ control IncrementTons .tons 5 "Tons" model
+          , control IncrementShf .shf 0.05 "SHF" model
+          , control IncrementSpeed .speed 1 "sim speed" model
+          ]
+      , Html.text (room_comment model.room_t model.room_h)
+      , Html.p [] []
+      , svg [viewBox "0 0 600 400", Svg.Attributes.width "600px" ]
+            (List.concat [ house
+                         , (protractor pro_x pro_y 20 30 0.2 60 0.3)
+                         , psych_chart model])
+      ]
 
 house =
     let
@@ -69,6 +142,7 @@ house =
         , Svg.text_ [ x (toString coil_x), y (toString coil_y), dx "15", dy "15", fontSize "10", stroke "blue" ] [ Html.text "coil" ]
         ]
 
+protractor : Float -> Float -> Float -> Float -> Float -> Float -> Float -> List ( Svg msg)
 protractor t u w q shf q_in shf_in =
     let
         x_1 = t
@@ -92,193 +166,136 @@ protractor t u w q shf q_in shf_in =
         , circle [ cx (toString x_3), cy (toString y_3), r "4", fill "blue" ] [ ]
         , Svg.text_ [ x (toString x_3), y (toString y_3), dx "5", dy "5", fontSize "10"   ] [ Html.text "supply" ]
         ]
-
-view : Model -> Html Msg
-
-view model =
-  div []
-      [ svg [viewBox "0 0 200 200", Svg.Attributes.width "250px" ]
-            (List.append house (protractor 150 30 20 30 0.2 60 0.3))
-            -- (protractor 150 30 20 30 0.2 60 0.3)
-      , div [blueStyle]
-            [ div []
-                  [ button [ onClick (DecrementSat .sa_t) ] [ Html.text "-" ]
-                  , div [] [ Html.text ("SA T " ++ (toString (.sa_t model))) ]
-                  , button [ onClick (IncrementSat .sa_t) ] [ Html.text "+" ]
+saturation_line : List (Float, Float)
+saturation_line = [ (40.0, 0.0052)
+                  , (45.0, 0.0063)
+                  , (50.0, 0.0076)
+                  , (55.0, 0.0092)
+                  , (60.0, 0.0112)
+                  , (65.0, 0.0132)
+                  , (70.0, 0.0158)
+                  , (75.0, 0.0188)
+                  , (80.0, 0.0223)
+                  , (85.0, 0.0264)
+                  , (90.0, 0.029)
+                  , (95.0, 0.029)
                   ]
-            , div []
-                [ button [ onClick (DecrementCfm .cfm) ] [ Html.text "-" ]
-                , div [] [ Html.text ("CFM " ++ (toString (.cfm model))) ]
-                , button [ onClick (IncrementCfm .cfm) ] [ Html.text "+" ]
-                ]
-            ]
-      , Html.text "Adjust weather"
-      , div [redStyle]
-          [ div []
-                [ button [ onClick (DecrementOat .oa_t) ] [ Html.text "-" ]
-                , div [] [ Html.text ("OA T " ++ (toString (.oa_t model))) ]
-                , button [ onClick (IncrementOat .oa_t) ] [ Html.text "+" ]
-                ]
-          , div []
-              [ button [ onClick (DecrementOawb .oa_wb) ] [ Html.text "-" ]
-              , div [] [ Html.text ("OA WB " ++ (toString (.oa_wb model))) ]
-              , button [ onClick (IncrementOawb .oa_wb) ] [ Html.text "+" ]
-              ]
-          ]
-      , Html.text "Adjust load"
-      , div [grayStyle]
-          [ div []
-                [ button [ onClick (DecrementTons .tons) ] [ Html.text "-" ]
-                , div [] [ Html.text ("Tons " ++ (toString (.tons model))) ]
-                , button [ onClick (IncrementTons .tons) ] [ Html.text "+" ]
-                ]
-          , div []
-              [ button [ onClick (DecrementShf .shf) ] [ Html.text "-" ]
-              , div [] [ Html.text ("SHF " ++ (toString (.shf model))) ]
-              , button [ onClick (IncrementShf .shf) ] [ Html.text "+" ]
-              ]
-          , div []
-              [ button [ onClick (DecrementSpeed .speed) ] [ Html.text "-" ]
-              , div [] [ Html.text ("sim speed " ++ (toString (.speed model))) ]
-              , button [ onClick (IncrementSpeed .speed) ] [ Html.text "+" ]
-              ]
-          ]
-      ]
+
+th_to_xy (t,h) = ((t - 40)*(toFloat bottom-100)/(95-40) + 100, (0.029-h)*(toFloat bottom-100)/(0.029-0.0052) + 100)
+
+air_state : (Float,Float) -> String -> String -> String -> String -> List (Svg msg)
+air_state th clr label d_x d_y =
+    let
+        (t, h) = th
+        (x_1, y_1) = th_to_xy (t,h)
+    in
+        [ circle [ cx (toString x_1), cy (toString y_1), r "4", fill clr ] [ ]
+        , Svg.text_ [ x (toString x_1), y (toString y_1), dx d_x, dy d_y, fontSize "10" ] [ Html.text label ]
+        ]
+
+avg : (Float,Float) -> (Float,Float) -> Float -> (Float,Float)
+avg xy1 xy2 t =
+    let
+        (x1, y1) = xy1
+        (x2, y2) = xy2
+    in
+        (x1 + (x2-x1)*t, y1 + (y2-y1)*t)
+
+mixed_th model = (70, 0.02)
+room_th model = (model.room_t, model.room_h)
+
+sa_th model = (toFloat model.sa_t, toFloat model.cfm / 10000000 + 0.005)
+
+outside_th model = (toFloat model.oa_t, toFloat model.oa_wb / 10000 + 0.015)
+
+recirc_th : Model -> (Float,Float)
+recirc_th model =
+     if model.time < 3 then
+         room_th model
+     else if model.time < 6 then
+              avg (room_th model) (mixed_th model) ((model.time-3)/3)
+     else if model.time < 9 then
+              avg (mixed_th model) (sa_th model) ((model.time-6)/3)
+     else
+              avg (sa_th model) (room_th model) ((model.time-9)/3)
+
+oa_th : Model -> (Float,Float)
+oa_th model =
+     if model.time < 3 then
+         room_th model
+     else if model.time < 6 then
+              avg (outside_th model) (mixed_th model) ((model.time-3)/3)
+     else if model.time < 9 then
+              avg (mixed_th model) (sa_th model) ((model.time-6)/3)
+     else
+              avg (sa_th model) (room_th model) ((model.time-9)/3)
+
+bottom = 400
+
+psych_chart : Model -> List (Svg msg)
+psych_chart model =
+    let
+        p_horiz (x,y) = line [ x1 (toString x), y1 (toString y), x2 (toString 1000), y2 (toString y), stroke "black" ] []
+        p_vert (x,y) = line [ x1 (toString x), y1 (toString y), x2 (toString x), y2 (toString 1000), stroke "black" ] []
+    in
+        List.concat [ List.map p_horiz (List.map th_to_xy saturation_line)
+                    , List.map p_vert  (List.map th_to_xy saturation_line)
+                    , List.concat [ air_state (outside_th model) "red" "outside" "5" "5"
+                                  , air_state (mixed_th model) "yellow" "mixed" "5" "5"
+                                  , air_state (room_th model) "green" "room" "5" "5"
+                                  , air_state (sa_th model) "blue" "supply" "5" "5"
+                                  , air_state (oa_th model) "black" "OA" "15" "15"
+                                  , air_state (recirc_th model) "black" "recirc" "15" "-5"
+                                  ]
+                    ]
+
+control inc get diff label model = div []
+                             [ button [ onClick (inc get -diff) ] [ Html.text "-" ]
+                             , div [inlineStyle] [ Html.text (label ++ " " ++ (toString (get model))) ]
+                             , button [ onClick (inc get diff) ] [ Html.text "+" ]
+                             ]
+
+inlineStyle = Html.Attributes.style
+        [ ( "display", "inline" )
+        ]
 
 blueStyle = Html.Attributes.style
         [ ( "font-family", "-apple-system, system, sans-serif" )
-        , ( "margin", "10px" )
-        -- , ( "padding", "40px" )
         , ( "background-color", "#9999FF" )
-        , ( "border", "lightgray solid 1px" )
         ]
 
 redStyle = Html.Attributes.style
         [ ( "font-family", "-apple-system, system, sans-serif" )
-        , ( "margin", "10px" )
-        -- , ( "padding", "40px" )
         , ( "background-color", "#FF9999" )
-        , ( "border", "lightgray solid 1px" )
         ]
 
 grayStyle = Html.Attributes.style
         [ ( "font-family", "-apple-system, system, sans-serif" )
-        , ( "margin", "10px" )
-        -- , ( "padding", "40px" )
         , ( "background-color", "#999999" )
-        , ( "border", "lightgray solid 1px" )
         ]
 
-type Msg = IncrementSat (Model->Int)
-         | DecrementSat (Model->Int)
-         | IncrementCfm (Model->Int)
-         | DecrementCfm (Model->Int)
-         | IncrementOat (Model->Int)
-         | DecrementOat (Model->Int)
-         | IncrementOawb (Model->Int)
-         | DecrementOawb (Model->Int)
-         | IncrementTons (Model->Int)
-         | DecrementTons (Model->Int)
-         | IncrementShf (Model->Float)
-         | DecrementShf (Model->Float)
-         | IncrementSpeed (Model->Int)
-         | DecrementSpeed (Model->Int)
-
-
-update : Msg -> Model -> Model
-
-update msg model =
-  case msg of
-    IncrementSat f -> { model | sa_t = f model + 1}
-    DecrementSat f -> { model | sa_t = f model - 1}
-    IncrementCfm f -> { model | cfm = f model + 1000}
-    DecrementCfm f -> { model | cfm = f model - 1000}
-    IncrementOat f -> { model | oa_t = f model + 1}
-    DecrementOat f -> { model | oa_t = f model - 1}
-    IncrementOawb f -> { model | oa_wb = f model + 3}
-    DecrementOawb f -> { model | oa_wb = f model - 3}
-    IncrementTons f -> { model | tons = f model + 5}
-    DecrementTons f -> { model | tons = f model - 5}
-    IncrementShf f -> { model | shf = f model + 0.05}
-    DecrementShf f -> { model | shf = f model - 0.05}
-    IncrementSpeed f -> { model | speed = f model + 1}
-    DecrementSpeed f -> { model | speed = f model - 1}
-
-
-
-
-
-p = 14.696  -- barometric pressure in psia
-cp = 1000      -- specific heat of the room
-
-room_T = 80      -- temperature in Farenheit
-supply_T = 56      -- temperature in Farenheit
-mixed_T = 83      -- temperature in Farenheit
-outside_T = 90      -- temperature in Farenheit
-
-room_rh = 50      -- relative humidity, percentage
-supply_rh = 95      -- relative humidity, percentage
-mixed_rh = 47      -- relative humidity, percentage
-twb = 84      -- outside wet bulb temperature {related to outside relative humidity}
-
-room_w = 0.011      -- pounds water vapor per pound dry air
-supply_w = 0.0095      -- pounds water vapor per pound dry air
-mixed_w = 0.0152      -- pounds water vapor per pound dry air
-outside_w = 0.024      -- pounds water vapor per pound dry air
-
-room_h = 31.2      -- enthalpy in BTUs per pound
-supply_h = 23.7      -- enthalpy in BTUs per pound
-mixed_h = 36.3      -- enthalpy in BTUs per pound
-outside_h = 48.2      -- enthalpy in BTUs per pound
-
-oa_percent = 30      -- percent of outside air
-
-sa_cfm = 30000      -- supply air flow rate
-
-q = 80      -- load in tons
-shf = 0.9      -- sensible heat factor [dimensionless]
-
--- Q_in;
--- SHF_in;
-
--- flow_w;
--- flow_T;
-
-  -- double recirc_w;
-  -- double recirc_T;
-
-  -- String section = "top";
-  -- int counter = 0;
-
-  -- AHU ahu;
-
-
--- speed = 5;
-steps = 20
-
-  -- public void run() {
-  --   while(true) {
-  --     try {
-  --       sleep((int)(1000/SPEED));//sleep for one second
-  --     } catch (InterruptedException ie) {}
-  --     updateRoomConditions();//update stuff, should be "synchronized"
-  --     updateFlowConditions();
-  --     counter++;
-  --     if (counter==STEPS) {
-  --       counter=0;
-  --       if (section == "right") {
-  --         section = "top";
-  --       } else if (section == "top") {
-  --         section = "left";
-  --       } else if (section == "left") {
-  --         section = "bottom";
-  --       } else if (section == "bottom") {
-  --         section = "right";
-  --       }
-  --     }
-  --     ahu.repaint();
-  --   }//end infinite while loop
-  -- }//end run()
+-- p = 14.696  -- barometric pressure in psia
+-- cp = 1000      -- specific heat of the room
+-- room_T = 80      -- temperature in Farenheit
+-- supply_T = 56      -- temperature in Farenheit
+-- mixed_T = 83      -- temperature in Farenheit
+-- outside_T = 90      -- temperature in Farenheit
+-- room_rh = 50      -- relative humidity, percentage
+-- supply_rh = 95      -- relative humidity, percentage
+-- mixed_rh = 47      -- relative humidity, percentage
+-- twb = 84      -- outside wet bulb temperature {related to outside relative humidity}
+-- room_w = 0.011      -- pounds water vapor per pound dry air
+-- supply_w = 0.0095      -- pounds water vapor per pound dry air
+-- mixed_w = 0.0152      -- pounds water vapor per pound dry air
+-- outside_w = 0.024      -- pounds water vapor per pound dry air
+-- room_h = 31.2      -- enthalpy in BTUs per pound
+-- supply_h = 23.7      -- enthalpy in BTUs per pound
+-- mixed_h = 36.3      -- enthalpy in BTUs per pound
+-- outside_h = 48.2      -- enthalpy in BTUs per pound
+-- oa_percent = 30      -- percent of outside air
+-- sa_cfm = 30000      -- supply air flow rate
+-- q = 80      -- load in tons
+-- shf = 0.9      -- sensible heat factor [dimensionless]
 
 findSatVaporPressure farenheit_temperature =
 -- convert to Rankine
@@ -294,105 +311,70 @@ findEnthalpy w t = ((0.24+0.444*w)*t + 1061*w)
 
 findHumidity pw p = 0.62198*(pw/(p - pw))
 
-{--
-   void updateRoomConditions() {
-    double pw = (room_rh/100)*findSatVaporPressure(room_T);
+pw humidity temperature = (humidity/100)*(findSatVaporPressure temperature)
 
-    double cool_supply = sa_cfm*60*0.241*(room_T - supply_T)/(13.2*12000);
+cool_supply sa_cfm room_t supply_t = sa_cfm*60*0.241*(room_t - supply_t)/(13.2*12000)
 
-    //double w_in = 42;//meaning of life, the universe, everything...
+-- q_in = sa_cfm*60*(findEnthalpy room_w room_t - findEnthalpy room_w room_t)/(13.2*12000)
+-- shf_in = cool_supply/q_in
 
-    Q_in = sa_cfm*60*(room_h - supply_h)/(13.2*12000);
-    SHF_in = cool_supply/Q_in;
+room_t old_room_t q shf cool_supply cp = old_room_t + (q*shf - cool_supply)/cp
 
-    room_T = room_T + (Q*SHF - cool_supply)/cp;
+room_w pw p = findHumidity pw p
+room_h room_w room_t = findEnthalpy room_w room_t
 
-    long now = System.currentTimeMillis()/1000;
-    //System.out.println("now = "+now);
+room_rh old_room_rh q shf room_w supply_w sa_cfm supply_t = old_room_rh +
+    (q*(1-shf) - (room_w - supply_w)*sa_cfm*60*(1093 + 0.444*supply_t)/(13.2*12000))/100
 
-    if (now%6==3) {
-      //System.out.println("temp time");
-      if (room_T>80)
-        AHU.print("Whew!  It's too hot in here!");
-      else if (room_T<70)
-        AHU.print("Brrr!  It's too cold in here!");
-      else
-        AHU.print("");
-    }
-
-
-    room_w = findHumidity(pw, p);
-    room_h = findEnthalpy(room_w, room_T);
+room_comment room_rh room_t =
+    if room_rh>60 then
+        "Ugh!  It's too humid."
+    else if room_rh<30 then
+             "It's too dry."
+         else if room_t>80 then
+                  "Whew!  It's too hot in here!"
+              else if room_t<70 then
+                       "Brrr!  It's too cold in here!"
+                   else
+                       ""
 
 
-    room_rh = room_rh +
-    (Q*(1-SHF) - (room_w - supply_w)*sa_cfm*60*(1093+.444*supply_T)/(13.2*12000))/100;
+-- updateOutsideConditions
+    -- //double pws = findSatVaporPressure(outside_T);
+-- pw_star = findSatVaporPressure twb
+-- w_star = findHumidity pw_star p
+-- outside_w ot = ((1093 - 0.556*twb)*w_star - 0.24*(ot - twb))/(1093 + 0.444*ot - twb)
+-- outside_h ow ot = (findEnthalpy ow ot)
 
-    if (now%6==0) {
-      if (room_rh>60)
-        AHU.print("Ugh!  It's too humid.");
-      else if (room_rh<30)
-        AHU.print("It's too dry.");
-      else
-        AHU.print("");
-    }
+-- updateMixedConditions
+-- mixed_t ot rt = (oa_percent/100)*ot + (1-oa_percent/100)*rt
+-- mixed_w ow rw = (oa_percent/100)*ow + (1-oa_percent/100)*ow
+-- pws mixed_t = findSatVaporPressure mixed_T
+mixed_h mw mt = findEnthalpy mw mt
 
+-- supply_rh supply_t = if supply_t<60 then
+--                           95
+--                       else
+--                           95 - (supply_T - 60)*3
 
-    updateMixedConditions();
-  }
+-- pw supply_rh supply_t = (supply_rh/100)*(findSatVaporPressure supply_T)
 
-  void updateOutsideConditions() {
-    //double pws = findSatVaporPressure(outside_T);
-    double pw_star = findSatVaporPressure(Twb);
-    double w_star = findHumidity(pw_star, p);
-    outside_w = ((1093 - 0.556*Twb)*w_star - 0.24*(outside_T - Twb))/(1093 + 0.444*outside_T - Twb);
-    outside_h = findEnthalpy(outside_w, outside_T);
-  }
+supply_w rh t p = findHumidity (pw rh t) p
+-- supply_h supply_w supply_t= findEnthalpy supply_w supply_t
 
-  void updateMixedConditions() {
-    mixed_T = (OA_percent/100)*outside_T + (1-OA_percent/100)*room_T;
-    mixed_w = (OA_percent/100)*outside_w + (1-OA_percent/100)*room_w;
-    //double pws = findSatVaporPressure(mixed_T);
-    mixed_h = findEnthalpy(mixed_w, mixed_T);
-  }
-
-  void updateSupplyConditions() {
-    if (supply_T<60) {
-      supply_rh = 95;
-    } else {
-      supply_rh = 95 - (supply_T - 60)*3;
-    }
-    double pw = (supply_rh/100)*findSatVaporPressure(supply_T);
-    supply_w = findHumidity(pw, p);
-    supply_h = findEnthalpy(supply_w, supply_T);
-  }
-
-  void updateFlowConditions() {
-    if (section == "right") {
-      flow_w = recirc_w = supply_w + (room_w - supply_w)*(counter*1.0/STEPS);//supply to room
-      flow_T = recirc_T = supply_T + (room_T - supply_T)*(counter*1.0/STEPS);//supply to room
-    } else if (section == "top") {
-      flow_w = recirc_w = room_w;//stay at room
-      flow_T = recirc_T = room_T;
-    } else if (section == "left") {
-      flow_w = outside_w + (mixed_w - outside_w)*(counter*1.0/STEPS);//outside to mixed
-      flow_T = outside_T + (mixed_T - outside_T)*(counter*1.0/STEPS);
-      recirc_w = room_w + (mixed_w - room_w)*(counter*1.0/STEPS);//room to mixed
-      recirc_T = room_T + (mixed_T - room_T)*(counter*1.0/STEPS);
-    } else if (section == "bottom") {
-      flow_w = recirc_w = mixed_w + (supply_w - mixed_w)*Math.pow(counter*1.0/STEPS,2);//mixed to supply quadratically
-      flow_T = recirc_T = mixed_T + (supply_T - mixed_T)*(counter*1.0/STEPS);
-    }
-  }
-
-  public void update_everything() {
-    updateOutsideConditions();
-    updateMixedConditions();
-    updateSupplyConditions();
-    updateFlowConditions();
-    //print_controls();
-    //print_everything();
-    ahu.update_everything();
-  }
-}
---}
+  -- updateFlowConditions
+    -- if (section == "right") {
+    --   flow_w = recirc_w = supply_w + (room_w - supply_w)*(counter*1.0/STEPS);//supply to room
+    --   flow_T = recirc_T = supply_T + (room_T - supply_T)*(counter*1.0/STEPS);//supply to room
+    -- } else if (section == "top") {
+    --   flow_w = recirc_w = room_w;//stay at room
+    --   flow_T = recirc_T = room_T;
+    -- } else if (section == "left") {
+    --   flow_w = outside_w + (mixed_w - outside_w)*(counter*1.0/STEPS);//outside to mixed
+    --   flow_T = outside_T + (mixed_T - outside_T)*(counter*1.0/STEPS);
+    --   recirc_w = room_w + (mixed_w - room_w)*(counter*1.0/STEPS);//room to mixed
+    --   recirc_T = room_T + (mixed_T - room_T)*(counter*1.0/STEPS);
+    -- } else if (section == "bottom") {
+    --   flow_w = recirc_w = mixed_w + (supply_w - mixed_w)*Math.pow(counter*1.0/STEPS,2);//mixed to supply quadratically
+    --   flow_T = recirc_T = mixed_T + (supply_T - mixed_T)*(counter*1.0/STEPS);
+    -- }
