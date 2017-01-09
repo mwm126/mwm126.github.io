@@ -1,8 +1,10 @@
 module Ahu exposing (..)
 
+import Char exposing (..)
+import Color exposing (..)
 import Html exposing (Html, div, button, text, label)
-import Html.Events exposing (onClick)
 import Html.Attributes exposing (style, placeholder)
+import Html.Events exposing (onClick)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Time exposing (Time, second)
@@ -15,14 +17,14 @@ main =
                }
 
 
-type alias Model = { sa_t : Int
-                   , oa_p : Int
-                   , cfm : Int
-                   , oa_t : Int
-                   , oa_wb : Int
-                   , tons : Int
+type alias Model = { sa_t : Float
+                   , oa_p : Float
+                   , cfm : Float
+                   , oa_t : Float
+                   , oa_wb : Float
+                   , tons : Float
                    , shf : Float
-                   , speed : Int
+                   , cycle : Int
                    , time : Float
                    , room_t : Float
                    , room_h : Float
@@ -37,43 +39,45 @@ init = (
         , oa_wb = 84
         , tons = 65
         , shf = 0.90
-        , speed = 5
+        , cycle = 5
         , time = 0
         , room_t = 60
         , room_h = 0.015
         }
        , Cmd.none)
 
-type Msg = IncrementOap (Model->Int) Int
-         | IncrementSat (Model->Int) Int
-         | IncrementCfm (Model->Int) Int
-         | IncrementOat (Model->Int) Int
-         | IncrementOawb (Model->Int) Int
-         | IncrementTons (Model->Int) Int
+type Msg = IncrementOap (Model->Float) Float
+         | IncrementSat (Model->Float) Float
+         | IncrementCfm (Model->Float) Float
+         | IncrementOat (Model->Float) Float
+         | IncrementOawb (Model->Float) Float
+         | IncrementTons (Model->Float) Float
          | IncrementShf (Model->Float) Float
-         | IncrementSpeed (Model->Int) Int
+         | IncrementCycle (Model->Int) Int
          | Tick Time
 
-time_mod : Time -> Float
-time_mod time =
+cycle_time = 6
+time_mod : Time -> Model -> Float
+time_mod time model =
     let
         t = Time.inSeconds time
+        ct = toFloat model.cycle
     in
-        t - 12*(toFloat (floor(t/12)))
+        (t - ct*(toFloat (floor(t/ct))))/ct
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     let
         new_model = case msg of
-                        IncrementOap f dd -> { model | oa_p = f model + dd}
-                        IncrementSat f dd -> { model | sa_t = f model + dd}
-                        IncrementCfm f dd -> { model | cfm = f model + dd}
-                        IncrementOat f dd -> { model | oa_t = f model + dd}
-                        IncrementOawb f dd -> { model | oa_wb = f model + dd}
-                        IncrementTons f dd -> { model | tons = f model + dd}
-                        IncrementShf f dd -> { model | shf = f model + dd}
-                        IncrementSpeed f dd -> { model | speed = f model + dd}
-                        Tick newTime -> { model | time = time_mod newTime}
+                        IncrementOap f dd -> { model | oa_p = (Basics.max 20.0 (Basics.min 100.0 (f model + dd)))}
+                        IncrementSat f dd -> { model | sa_t = (Basics.max 42.0 (Basics.min 120.0 (f model + dd)))}
+                        IncrementCfm f dd -> { model | cfm = (Basics.max 20000.0 (Basics.min 40000.0 (f model + dd)))}
+                        IncrementOat f dd -> { model | oa_t = (Basics.max 65.0 (Basics.min 94.0 (f model + dd)))}
+                        IncrementOawb f dd -> { model | oa_wb = (Basics.max 65.0 (Basics.min 94.0 (f model + dd)))}
+                        IncrementTons f dd -> { model | tons = (Basics.max 40.0 (Basics.min 100.0 (f model + dd)))}
+                        IncrementShf f dd -> { model | shf = (Basics.max 0.5 (Basics.min 1.0 (f model + dd)))}
+                        IncrementCycle f dd -> { model | cycle = f model + dd}
+                        Tick newTime -> { model | time = time_mod newTime model}
     in
         (new_model, Cmd.none)
 
@@ -101,30 +105,39 @@ view model =
       , Html.text "Adjust load"
       , div [grayStyle]
           [ control IncrementTons .tons 5 "Tons" model
-          , control IncrementShf .shf 0.05 "SHF" model
-          , control IncrementSpeed .speed 1 "sim speed" model
+          , control IncrementShf .time 0.05 "SHF" model
+          , control IncrementCycle .cycle 1 "sim cycle (seconds)" model
           ]
       , Html.text (room_comment model.room_t model.room_h)
       , Html.p [] []
       , svg [viewBox "0 0 600 400", Svg.Attributes.width "600px" ]
-            (List.concat [ house
+            (List.concat [ house model
                          , (protractor pro_x pro_y 20 30 0.2 60 0.3)
                          , psych_chart model])
       ]
 
-house =
+-- for drawing the house
+air_radius = 10
+duct_height = 3*air_radius
+duct_width = 8*air_radius
+-- house offsets
+xx = 10
+yy = 10
+roof_width = 10
+roof_height = 10
+
+house model =
     let
-       rr = 10
-       hh = 3*rr
-       ww = 8*rr
-       xx = 10
-       yy = 10
-            -- house
-       rw = 10
-       rh = 10
+       rr = air_radius
+       hh = duct_height
+       ww = duct_width
+       rw = roof_width
+       rh = roof_height
+       (ax, ay) = .air_location (sprite_states model)
+                   -- points in house icon
        xs = [ 0, rw, 2*rw/3, 2*rw/3, -2*rw/3, -2*rw/3, -rw ]
        ys = [ 0, rh, rh,       2*rh,    2*rh, rh,       rh ]
-       hp2 = List.map2 (\ x y -> toString (xx+ww+rr+x) ++ "," ++ toString (yy+hh/3+y)) xs ys
+       house_points = List.map2 (\ x y -> toString (xx+ww+rr+x) ++ "," ++ toString (yy+hh/3+y)) xs ys
        coil_x = xx+ww*0.6
        coil_y = yy+hh
        coil x = line [ x1 (toString (coil_x+x)), y1 (toString (coil_y-rr)), x2 (toString (coil_x+x)), y2 (toString coil_y), stroke "blue" ] []
@@ -133,13 +146,14 @@ house =
         , rect [ Svg.Attributes.x (toString xx), Svg.Attributes.y (toString (yy + rr)), width (toString (2*rr)), height (toString (rr)), fill "gray" ] [ ]
         , rect [ Svg.Attributes.x (toString (xx+3*rr)), Svg.Attributes.y (toString (yy + rr)), width (toString (ww-(xx+3*rr))), height (toString (rr)), fill "gray" ] [ ]
         , line [ x1 (toString xx), y1 (toString (yy+hh)), x2 (toString (xx+ww)), y2 (toString (yy+hh)), stroke "black" ] []
-        , polygon [ points (String.concat (List.intersperse " " hp2)), stroke "black" ] []
+        , polygon [ points (String.concat (List.intersperse " " house_points)), stroke "black" ] []
         , coil 10
         , coil 12
         , coil 14
         , coil 16
         , coil 18
         , Svg.text_ [ x (toString coil_x), y (toString coil_y), dx "15", dy "15", fontSize "10", stroke "blue" ] [ Html.text "coil" ]
+        , circle [ cx (toString ax), cy (toString ay), r "10", fill (sprite_states model).air_color ] [ ]
         ]
 
 protractor : Float -> Float -> Float -> Float -> Float -> Float -> Float -> List ( Svg msg)
@@ -201,34 +215,72 @@ avg xy1 xy2 t =
     in
         (x1 + (x2-x1)*t, y1 + (y2-y1)*t)
 
+avg_int : Float -> Float -> Float -> String
+avg_int r1 r2 t = toRadix 16 (round (r1 + (r2-r1)*t))
+
+avg_color : Color -> Color -> Float -> String
+avg_color c1 c2 t =
+    let
+        r1 = toFloat (Color.toRgb c1).red
+        g1 = toFloat (Color.toRgb c1).green
+        b1 = toFloat (Color.toRgb c1).blue
+        r2 = toFloat (Color.toRgb c2).red
+        g2 = toFloat (Color.toRgb c2).green
+        b2 = toFloat (Color.toRgb c2).blue
+    in
+        "#" ++ avg_int r1 r2 t ++ avg_int g1 g2 t ++ avg_int b1 b2 t
+
 mixed_th model = (70, 0.02)
 room_th model = (model.room_t, model.room_h)
 
-sa_th model = (toFloat model.sa_t, toFloat model.cfm / 10000000 + 0.005)
+sa_th model = (model.sa_t, model.cfm / 10000000 + 0.005)
 
-outside_th model = (toFloat model.oa_t, toFloat model.oa_wb / 10000 + 0.015)
+outside_th model = (model.oa_t, model.oa_wb / 10000 + 0.015)
 
-recirc_th : Model -> (Float,Float)
-recirc_th model =
-     if model.time < 3 then
-         room_th model
-     else if model.time < 6 then
-              avg (room_th model) (mixed_th model) ((model.time-3)/3)
-     else if model.time < 9 then
-              avg (mixed_th model) (sa_th model) ((model.time-6)/3)
+type alias Sprites = { recirc_th : (Float,Float)
+                     , oa_th : (Float,Float)
+                     , air_location : (Float,Float)
+                     , air_color : String
+                     }
+sprite_states : Model -> Sprites
+sprite_states model =
+     if model.time < 0.25 then
+         let
+             pp = ((model.time)/0.25)
+         in
+             { recirc_th = room_th model
+             , oa_th = room_th model
+             , air_location = avg (xx+duct_width, yy) (xx, yy) pp
+             , air_color = avg_color green green pp
+             }
+     else if model.time < 0.5 then
+              let
+                  pp = ((model.time-0.25)/0.25)
+              in
+                  { recirc_th = avg (room_th model) (mixed_th model) pp
+                  , oa_th = avg (outside_th model) (mixed_th model) pp
+                  , air_location = avg (xx, yy) (xx, yy+duct_height) pp
+                  , air_color = avg_color blue green pp
+                  }
+
+     else if model.time < 0.75 then
+              let
+                  pp = ((model.time-0.5)/0.25)
+              in
+                  { recirc_th = avg (mixed_th model) (sa_th model) pp
+                  , oa_th = avg (mixed_th model) (sa_th model) pp
+                  , air_location = avg (xx, yy+duct_height) (xx+duct_width, yy+duct_height) pp
+                  , air_color = avg_color yellow blue pp
+              }
      else
-              avg (sa_th model) (room_th model) ((model.time-9)/3)
-
-oa_th : Model -> (Float,Float)
-oa_th model =
-     if model.time < 3 then
-         room_th model
-     else if model.time < 6 then
-              avg (outside_th model) (mixed_th model) ((model.time-3)/3)
-     else if model.time < 9 then
-              avg (mixed_th model) (sa_th model) ((model.time-6)/3)
-     else
-              avg (sa_th model) (room_th model) ((model.time-9)/3)
+              let
+                  pp = ((model.time-0.75)/0.25)
+              in
+                  { recirc_th = avg (sa_th model) (room_th model) pp
+                  , oa_th = avg (sa_th model) (room_th model) pp
+                  , air_location = avg (xx+duct_width, yy+duct_height) (xx+duct_width, yy) pp
+                  , air_color = avg_color blue green pp
+                  }
 
 bottom = 400
 
@@ -244,8 +296,8 @@ psych_chart model =
                                   , air_state (mixed_th model) "yellow" "mixed" "5" "5"
                                   , air_state (room_th model) "green" "room" "5" "5"
                                   , air_state (sa_th model) "blue" "supply" "5" "5"
-                                  , air_state (oa_th model) "black" "OA" "15" "15"
-                                  , air_state (recirc_th model) "black" "recirc" "15" "-5"
+                                  , air_state (.oa_th (sprite_states model)) "black" "OA" "15" "15"
+                                  , air_state (.recirc_th (sprite_states model)) "black" "recirc" "15" "-5"
                                   ]
                     ]
 
@@ -378,3 +430,14 @@ supply_w rh t p = findHumidity (pw rh t) p
     --   flow_w = recirc_w = mixed_w + (supply_w - mixed_w)*Math.pow(counter*1.0/STEPS,2);//mixed to supply quadratically
     --   flow_T = recirc_T = mixed_T + (supply_T - mixed_T)*(counter*1.0/STEPS);
     -- }
+toRadix : Int -> Int -> String
+toRadix r n =
+  let
+    getChr c = if c < 10 then toString c else String.fromChar <| Char.fromCode (87+c)
+
+    getStr b = if n < b then getChr n else (toRadix r (n//b)) ++  (getChr (n%b))
+
+  in
+    case (r>=2 && r<=16) of
+      True -> getStr r
+      False -> toString n
