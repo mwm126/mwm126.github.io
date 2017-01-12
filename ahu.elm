@@ -33,7 +33,7 @@ type alias Model = { sa_t : Float
 init : (Model, Cmd Msg)
 init = (
         { sa_t = 62
-        , oa_p = 50
+        , oa_p = 30
         , cfm = 30000
         , oa_t = 90
         , oa_wb = 84
@@ -87,7 +87,7 @@ subscriptions model = Time.every (0.1 * second) Tick
 view : Model -> Html Msg
 view model =
     let
-        pro_x = 150.0
+        pro_x = 250.0
         pro_y = 30
     in
   div []
@@ -111,8 +111,8 @@ view model =
       , Html.text (room_comment model.room_t model.room_h)
       , Html.p [] []
       , svg [viewBox "0 0 600 400", Svg.Attributes.width "600px" ]
-            (List.concat [ house model
-                         , (protractor pro_x pro_y 20 30 0.2 60 0.3)
+            (List.concat [ (protractor pro_x pro_y 20 30 0.2 60 0.3)
+                         , house model
                          , psych_chart model])
       ]
 
@@ -134,6 +134,7 @@ house model =
        rw = roof_width
        rh = roof_height
        (ax, ay) = .air_location (sprite_states model)
+       (rx, ry) = .recirc_air_location (sprite_states model)
                    -- points in house icon
        xs = [ 0, rw, 2*rw/3, 2*rw/3, -2*rw/3, -2*rw/3, -rw ]
        ys = [ 0, rh, rh,       2*rh,    2*rh, rh,       rh ]
@@ -153,7 +154,9 @@ house model =
         , coil 16
         , coil 18
         , Svg.text_ [ x (toString coil_x), y (toString coil_y), dx "15", dy "15", fontSize "10", stroke "blue" ] [ Html.text "coil" ]
-        , circle [ cx (toString ax), cy (toString ay), r "10", fill (sprite_states model).air_color ] [ ]
+        -- , circle [ cx (toString ax), cy (toString ay), r "10", fill (sprite_states model).air_color ] [ ]
+        , pie ax ay 10 (1-model.oa_p/100-0.25) 0.75 (sprite_states model).recirc_air_color
+        , pie rx ry 10 -0.25 (1.0-model.oa_p/100-0.25) (sprite_states model).air_color
         ]
 
 protractor : Float -> Float -> Float -> Float -> Float -> Float -> Float -> List ( Svg msg)
@@ -166,9 +169,10 @@ protractor t u w q shf q_in shf_in =
         x_3 = t - q_in*sin(shf_in*pi/2)
         y_3 = u + q_in*cos(shf_in*pi/2)
     in
-        [
+        -- [
+        [ pieline x_1 y_1 80 0 0.5
             -- room center
-        Svg.text_ [ x (toString x_1), y (toString y_1), dx "5", dy "-5", fontSize "10"   ] [ Html.text "Cooling Vectors (BTU/Hr)" ]
+        , Svg.text_ [ x (toString x_1), y (toString y_1), dx "5", dy "-5", fontSize "10"   ] [ Html.text "Cooling Vectors (BTU/Hr)" ]
         , circle [ cx (toString x_1), cy (toString y_1), r "4", fill "green" ] [ ]
         , Svg.text_ [ x (toString x_1), y (toString y_1), dx "5", dy "5", fontSize "10"   ] [ Html.text "room" ]
             -- load vector
@@ -179,6 +183,7 @@ protractor t u w q shf q_in shf_in =
         , line [ x1 (toString x_1), y1 (toString y_1), x2 (toString x_3), y2 (toString y_3), stroke "black" ] []
         , circle [ cx (toString x_3), cy (toString y_3), r "4", fill "blue" ] [ ]
         , Svg.text_ [ x (toString x_3), y (toString y_3), dx "5", dy "5", fontSize "10"   ] [ Html.text "supply" ]
+-- protractor
         ]
 saturation_line : List (Float, Float)
 saturation_line = [ (40.0, 0.0052)
@@ -240,46 +245,60 @@ outside_th model = (model.oa_t, model.oa_wb / 10000 + 0.015)
 type alias Sprites = { recirc_th : (Float,Float)
                      , oa_th : (Float,Float)
                      , air_location : (Float,Float)
+                     , recirc_air_location : (Float,Float)
                      , air_color : String
+                     , recirc_air_color : String
                      }
 sprite_states : Model -> Sprites
 sprite_states model =
      if model.time < 0.25 then
+         -- passing through the building
          let
              pp = ((model.time)/0.25)
          in
              { recirc_th = room_th model
              , oa_th = room_th model
              , air_location = avg (xx+duct_width, yy) (xx, yy) pp
+             , recirc_air_location = avg (xx+duct_width, yy) (xx+duct_width*0.3, yy) pp
              , air_color = avg_color green green pp
+             , recirc_air_color = avg_color green green pp
              }
      else if model.time < 0.5 then
+         -- exiting the building
               let
                   pp = ((model.time-0.25)/0.25)
               in
                   { recirc_th = avg (room_th model) (mixed_th model) pp
                   , oa_th = avg (outside_th model) (mixed_th model) pp
                   , air_location = avg (xx, yy) (xx, yy+duct_height) pp
-                  , air_color = avg_color blue green pp
+                  , recirc_air_location = avg (xx+duct_width*0.3, yy) (xx+duct_width*0.3, yy+duct_height) pp
+                  , air_color = avg_color green red pp
+                  , recirc_air_color = avg_color green green pp
                   }
 
      else if model.time < 0.75 then
+        -- separate air and recirc
               let
                   pp = ((model.time-0.5)/0.25)
               in
                   { recirc_th = avg (mixed_th model) (sa_th model) pp
                   , oa_th = avg (mixed_th model) (sa_th model) pp
                   , air_location = avg (xx, yy+duct_height) (xx+duct_width, yy+duct_height) pp
+                  , recirc_air_location = avg (xx+duct_width*0.3, yy+duct_height) (xx+duct_width, yy+duct_height) pp
                   , air_color = avg_color yellow blue pp
+                  , recirc_air_color = avg_color green green pp
               }
      else
+         -- entering the building
               let
                   pp = ((model.time-0.75)/0.25)
               in
                   { recirc_th = avg (sa_th model) (room_th model) pp
                   , oa_th = avg (sa_th model) (room_th model) pp
                   , air_location = avg (xx+duct_width, yy+duct_height) (xx+duct_width, yy) pp
+                  , recirc_air_location = avg (xx+duct_width, yy+duct_height) (xx+duct_width, yy) pp
                   , air_color = avg_color blue green pp
+                  , recirc_air_color = avg_color blue green pp
                   }
 
 bottom = 400
@@ -441,3 +460,27 @@ toRadix r n =
     case (r>=2 && r<=16) of
       True -> getStr r
       False -> toString n
+
+pie_points : Float -> Float -> Int -> Float -> Float -> List (String)
+pie_points cx cy r t1 t2 =
+    let
+        sides = 30
+        sf = toFloat sides
+        ts = List.map (\n -> t1 + (toFloat n)*(t2-t1)/sf) (List.range 0 sides)
+        pts = [(cx,cy)] ++ List.map (\t -> (cx + (toFloat r)*cos(2*pi*t), cy + (toFloat r)*sin(2*pi*t))) ts ++ [(cx,cy)]
+    in
+        List.map (\ (x,y) -> toString x ++ "," ++ toString y) pts
+
+pie : Float -> Float -> Int -> Float -> Float -> String -> Svg msg
+pie cx cy r t1 t2 color =
+    let
+        pt_string = pie_points cx cy r t1 t2
+    in
+        polygon [ points (String.concat (List.intersperse " " pt_string)), stroke color, fill color ] []
+
+pieline : Float -> Float -> Int -> Float -> Float -> Svg msg
+pieline cx cy r t1 t2 =
+    let
+        pt_string = pie_points cx cy r t1 t2
+    in
+        polyline [ points (String.concat (List.intersperse " " pt_string)), stroke "gray", fill "white" ] []
