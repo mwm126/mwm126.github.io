@@ -17,17 +17,18 @@ main =
                }
 
 
-type alias Model = { sa_t : Float
-                   , oa_p : Float
-                   , cfm : Float
-                   , oa_t : Float
-                   , oa_wb : Float
-                   , tons : Float
-                   , shf : Float
+type alias Model = { sa_t : Float -- supply air temperature
+                   , oa_p : Float --outsdie air percent
+                   , cfm : Float -- supply air flow rate
+                   , oa_t : Float -- outside air temprature
+                   , oa_wb : Float -- outside air web bulb, function of outside humidity
+                   , tons : Float -- building cooling load
+                   , shf : Float -- sensible heat factor qsense/qtotal
                    , cycle : Int
                    , time : Float
-                   , room_t : Float
-                   , room_h : Float
+                   , room_rh : Float -- room relative humidity
+                   , room_t : Float -- room temperature
+                   , room_h : Float -- room enthalpy
                    }
 
 init : (Model, Cmd Msg)
@@ -39,9 +40,10 @@ init = (
         , oa_wb = 84
         , tons = 65
         , shf = 0.90
-        , cycle = 5
+        , cycle = 10
         , time = 0
-        , room_t = 60
+        , room_rh = 50
+        , room_t = 80
         , room_h = 0.015
         }
        , Cmd.none)
@@ -56,7 +58,7 @@ type Msg = IncrementOap (Model->Float) Float
          | IncrementCycle (Model->Int) Int
          | Tick Time
 
-cycle_time = 6
+
 time_mod : Time -> Model -> Float
 time_mod time model =
     let
@@ -65,24 +67,29 @@ time_mod time model =
     in
         (t - ct*(toFloat (floor(t/ct))))/ct
 
+
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     let
         new_model = case msg of
                         IncrementOap f dd -> { model | oa_p = (Basics.max 20.0 (Basics.min 100.0 (f model + dd)))}
-                        IncrementSat f dd -> { model | sa_t = (Basics.max 42.0 (Basics.min 120.0 (f model + dd)))}
+                        IncrementSat f dd -> { model | sa_t = (Basics.max 45.0 (Basics.min 60.0 (f model + dd)))}
                         IncrementCfm f dd -> { model | cfm = (Basics.max 20000.0 (Basics.min 40000.0 (f model + dd)))}
                         IncrementOat f dd -> { model | oa_t = (Basics.max 65.0 (Basics.min 94.0 (f model + dd)))}
                         IncrementOawb f dd -> { model | oa_wb = (Basics.max 65.0 (Basics.min 94.0 (f model + dd)))}
                         IncrementTons f dd -> { model | tons = (Basics.max 40.0 (Basics.min 100.0 (f model + dd)))}
                         IncrementShf f dd -> { model | shf = (Basics.max 0.5 (Basics.min 1.0 (f model + dd)))}
                         IncrementCycle f dd -> { model | cycle = f model + dd}
-                        Tick newTime -> { model | time = time_mod newTime model}
+                        Tick newTime -> { model | time = time_mod newTime model
+                                              , room_rh = new_room_t model
+                                              , room_t = new_room_t model}
     in
         (new_model, Cmd.none)
 
+
 subscriptions : Model -> Sub Msg
 subscriptions model = Time.every (0.1 * second) Tick
+
 
 view : Model -> Html Msg
 view model =
@@ -105,16 +112,18 @@ view model =
       , Html.text "Adjust load"
       , div [grayStyle]
           [ control IncrementTons .tons 5 "Tons" model
-          , control IncrementShf .time 0.05 "SHF" model
+          , control IncrementShf .shf 0.05 "SHF" model
           , control IncrementCycle .cycle 1 "sim cycle (seconds)" model
+          , control IncrementShf .time 0.05 "Time" model
           ]
-      , Html.text (room_comment model.room_t model.room_h)
+      , Html.text (room_comment model)
       , Html.p [] []
       , svg [viewBox "0 0 600 400", Svg.Attributes.width "600px" ]
-            (List.concat [ (protractor pro_x pro_y 20 30 0.2 60 0.3)
+            (List.concat [ (protractor pro_x pro_y model)
                          , house model
                          , psych_chart model])
       ]
+
 
 -- for drawing the house
 air_radius = 10
@@ -123,25 +132,25 @@ duct_width = 8*air_radius
 -- house offsets
 xx = 10
 yy = 10
-roof_width = 10
-roof_height = 10
 
 house model =
     let
-       rr = air_radius
-       hh = duct_height
-       ww = duct_width
-       rw = roof_width
-       rh = roof_height
-       (ax, ay) = .air_location (sprite_states model)
-       (rx, ry) = .recirc_air_location (sprite_states model)
+        roof_width = 10
+        roof_height = 10
+        rr = air_radius
+        hh = duct_height
+        ww = duct_width
+        rw = roof_width
+        rh = roof_height
+        (ax, ay) = .air_location (sprite_states model)
+        (rx, ry) = .recirc_air_location (sprite_states model)
                    -- points in house icon
-       xs = [ 0, rw, 2*rw/3, 2*rw/3, -2*rw/3, -2*rw/3, -rw ]
-       ys = [ 0, rh, rh,       2*rh,    2*rh, rh,       rh ]
-       house_points = List.map2 (\ x y -> toString (xx+ww+rr+x) ++ "," ++ toString (yy+hh/3+y)) xs ys
-       coil_x = xx+ww*0.6
-       coil_y = yy+hh
-       coil x = line [ x1 (toString (coil_x+x)), y1 (toString (coil_y-rr)), x2 (toString (coil_x+x)), y2 (toString coil_y), stroke "blue" ] []
+        xs = [ 0, rw, 2*rw/3, 2*rw/3, -2*rw/3, -2*rw/3, -rw ]
+        ys = [ 0, rh, rh,       2*rh,    2*rh, rh,       rh ]
+        house_points = List.map2 (\ x y -> toString (xx+ww+rr+x) ++ "," ++ toString (yy+hh/3+y)) xs ys
+        coil_x = xx+ww*0.6
+        coil_y = yy+hh
+        coil x = line [ x1 (toString (coil_x+x)), y1 (toString (coil_y-rr)), x2 (toString (coil_x+x)), y2 (toString coil_y), stroke "blue" ] []
     in
         [ line [ x1 (toString xx), y1 (toString yy), x2 (toString (xx+ww)), y2 (toString yy), stroke "black" ] []
         , rect [ Svg.Attributes.x (toString xx), Svg.Attributes.y (toString (yy + rr)), width (toString (2*rr)), height (toString (rr)), fill "gray" ] [ ]
@@ -159,20 +168,34 @@ house model =
         , pie rx ry 10 -0.25 (1.0-model.oa_p/100-0.25) (sprite_states model).air_color
         ]
 
-protractor : Float -> Float -> Float -> Float -> Float -> Float -> Float -> List ( Svg msg)
-protractor t u w q shf q_in shf_in =
+
+p = 14.696 -- barometric pressure in psia
+
+
+protractor : Float -> Float -> Model -> List ( Svg msg)
+protractor t u model =
     let
+        w = 20
+        shf = model.shf
+        room_abs_hum = findHumidity (pw model.room_rh model.room_t) p
+        q_in = total_heat_flow model.cfm room_abs_hum model.room_t (abs_w (pw model.room_rh model.sa_t) p) model.sa_t
+-- sensible heat flow in
+        shf_in = cool_supply model / q_in
         x_1 = t
         y_1 = u
-        x_2 = t - q*sin(shf*pi/2)
-        y_2 = u + q*cos(shf*pi/2)
+        x_2 = t - model.tons*sin(shf*pi/2)
+        y_2 = u + model.tons*cos(shf*pi/2)
         x_3 = t - q_in*sin(shf_in*pi/2)
         y_3 = u + q_in*cos(shf_in*pi/2)
     in
         -- [
-        [ pieline x_1 y_1 80 0 0.5
+        [ pieline x_1 y_1 (round model.tons) 0 0.5
             -- room center
-        , Svg.text_ [ x (toString x_1), y (toString y_1), dx "5", dy "-5", fontSize "10"   ] [ Html.text "Cooling Vectors (BTU/Hr)" ]
+        -- , Svg.text_ [ x (toString x_1), y (toString y_1), dx "5", dy "-5", fontSize "10"   ] [ Html.text "Cooling Vectors (BTU/Hr)" ]
+        , Svg.text_ [ x (toString x_1), y (toString y_1), dx "5", dy "-5", fontSize "10"   ] [ Html.text ("room_t = " ++ (toString model.room_t) ++
+                                                                                                              " shf_in="++(toString shf_in) ++
+                                                                                                              " q_in="++(toString q_in) ++
+                                                                                                              " room_abs_hum =" ++ (toString room_abs_hum ))]
         , circle [ cx (toString x_1), cy (toString y_1), r "4", fill "green" ] [ ]
         , Svg.text_ [ x (toString x_1), y (toString y_1), dx "5", dy "5", fontSize "10"   ] [ Html.text "room" ]
             -- load vector
@@ -200,7 +223,9 @@ saturation_line = [ (40.0, 0.0052)
                   , (95.0, 0.029)
                   ]
 
+th_to_xy : (Float,Float) -> (Float,Float)
 th_to_xy (t,h) = ((t - 40)*(toFloat bottom-100)/(95-40) + 100, (0.029-h)*(toFloat bottom-100)/(0.029-0.0052) + 100)
+
 
 air_state : (Float,Float) -> String -> String -> String -> String -> List (Svg msg)
 air_state th clr label d_x d_y =
@@ -212,6 +237,7 @@ air_state th clr label d_x d_y =
         , Svg.text_ [ x (toString x_1), y (toString y_1), dx d_x, dy d_y, fontSize "10" ] [ Html.text label ]
         ]
 
+
 avg : (Float,Float) -> (Float,Float) -> Float -> (Float,Float)
 avg xy1 xy2 t =
     let
@@ -220,8 +246,10 @@ avg xy1 xy2 t =
     in
         (x1 + (x2-x1)*t, y1 + (y2-y1)*t)
 
+
 avg_int : Float -> Float -> Float -> String
 avg_int r1 r2 t = toRadix 16 (round (r1 + (r2-r1)*t))
+
 
 avg_color : Color -> Color -> Float -> String
 avg_color c1 c2 t =
@@ -235,12 +263,26 @@ avg_color c1 c2 t =
     in
         "#" ++ avg_int r1 r2 t ++ avg_int g1 g2 t ++ avg_int b1 b2 t
 
-mixed_th model = (70, 0.02)
-room_th model = (model.room_t, model.room_h)
 
-sa_th model = (model.sa_t, model.cfm / 10000000 + 0.005)
+mixed_th model =
+    let
+        (rt, rh) = room_th model
+        (ot, oh) = outside_th model
+        pp = model.oa_p
+    in
+        ( (pp*ot + (100-pp)*rt)/100
+        , (pp*oh + (100-pp)*rh)/100
+        )
 
-outside_th model = (model.oa_t, model.oa_wb / 10000 + 0.015)
+
+room_th model = (model.room_t, findHumidity (pw model.room_rh model.room_t) p )
+
+
+sa_th model = (model.sa_t, findHumidity (pw (supply_rh model.sa_t) model.sa_t) p)
+
+
+outside_th model = (model.oa_t, findHumidity (pw model.oa_wb model.oa_t) p )
+
 
 type alias Sprites = { recirc_th : (Float,Float)
                      , oa_th : (Float,Float)
@@ -249,6 +291,8 @@ type alias Sprites = { recirc_th : (Float,Float)
                      , air_color : String
                      , recirc_air_color : String
                      }
+
+
 sprite_states : Model -> Sprites
 sprite_states model =
      if model.time < 0.25 then
@@ -301,7 +345,9 @@ sprite_states model =
                   , recirc_air_color = avg_color blue green pp
                   }
 
+
 bottom = 400
+
 
 psych_chart : Model -> List (Svg msg)
 psych_chart model =
@@ -346,7 +392,6 @@ grayStyle = Html.Attributes.style
         ]
 
 -- p = 14.696  -- barometric pressure in psia
--- cp = 1000      -- specific heat of the room
 -- room_T = 80      -- temperature in Farenheit
 -- supply_T = 56      -- temperature in Farenheit
 -- mixed_T = 83      -- temperature in Farenheit
@@ -378,57 +423,86 @@ findSatVaporPressure farenheit_temperature =
               + 1.289036e-5*t*t
                   - 2.4780681e-9*t*t*t+6.5459673*logBase e t)
 
+-- w is absolute humidity
+-- t is temperature
 findEnthalpy w t = ((0.24+0.444*w)*t + 1061*w)
 
+-- pw partial pressure of water
+-- p absolute pressure of air
 findHumidity pw p = 0.62198*(pw/(p - pw))
 
-pw humidity temperature = (humidity/100)*(findSatVaporPressure temperature)
+-- pw partial pressure of water
+pw rel_humidity temperature = (rel_humidity/100)*(findSatVaporPressure temperature)
 
-cool_supply sa_cfm room_t supply_t = sa_cfm*60*0.241*(room_t - supply_t)/(13.2*12000)
 
--- q_in = sa_cfm*60*(findEnthalpy room_w room_t - findEnthalpy room_w room_t)/(13.2*12000)
--- shf_in = cool_supply/q_in
+-- total heat flow in
+total_heat_flow sa_cfm room_w room_t supply_w supply_t= sa_cfm*60*(findEnthalpy room_w room_t - findEnthalpy supply_w supply_t)/(13.2*12000)
+
+
+cp = 0.241      -- specific heat of the air in the room in btu per (lb.deg F)
+
+
+btu_per_ton = 12000
+
+
+-- sensible cool supply in tons
+cool_supply model = model.cfm*60*cp*(model.room_t - model.sa_t)/(13.2*btu_per_ton)
+
+
+new_room_t model = model.room_t + (((model.tons*model.shf - cool_supply model)*btu_per_ton/cp)/1000000.0)
+
 
 room_t old_room_t q shf cool_supply cp = old_room_t + (q*shf - cool_supply)/cp
 
-room_w pw p = findHumidity pw p
+
+-- absolute humidity of air
+abs_w pw p = findHumidity pw p
+
+
 room_h room_w room_t = findEnthalpy room_w room_t
 
-room_rh old_room_rh q shf room_w supply_w sa_cfm supply_t = old_room_rh +
-    (q*(1-shf) - (room_w - supply_w)*sa_cfm*60*(1093 + 0.444*supply_t)/(13.2*12000))/100
 
-room_comment room_rh room_t =
-    if room_rh>60 then
-        "Ugh!  It's too humid."
-    else if room_rh<30 then
-             "It's too dry."
-         else if room_t>80 then
-                  "Whew!  It's too hot in here!"
-              else if room_t<70 then
-                       "Brrr!  It's too cold in here!"
-                   else
-                       ""
+new_rh model =
+    let
+        q = model.tons
+        shf = model.shf
+        sa_cfm = model.cfm
+        (room_t, room_w) = room_th model
+        (supply_t, supply_w) = sa_th model
+    in
+        model.rh +
+            (q*(1-shf) - (room_w - supply_w)*sa_cfm*60*(1093 + 0.444*supply_t)/(13.2*12000))/100
 
 
--- updateOutsideConditions
-    -- //double pws = findSatVaporPressure(outside_T);
--- pw_star = findSatVaporPressure twb
--- w_star = findHumidity pw_star p
--- outside_w ot = ((1093 - 0.556*twb)*w_star - 0.24*(ot - twb))/(1093 + 0.444*ot - twb)
--- outside_h ow ot = (findEnthalpy ow ot)
+room_comment model =
+    let
+        room_rh = model.room_rh
+        room_t = model.room_t
+    in
+      if room_rh>60 then
+          "Ugh!  It's too humid."++(toString room_rh )
+      else if room_rh<30 then
+              "It's too dry."++(toString room_rh )
+          else if room_t>80 then
+                    "Whew!  It's too hot in here!"++(toString room_t )
+                else if room_t<70 then
+                        "Brrr!  It's too cold in here!"++(toString room_t )
+                    else
+                        ""
 
--- updateMixedConditions
--- mixed_t ot rt = (oa_percent/100)*ot + (1-oa_percent/100)*rt
--- mixed_w ow rw = (oa_percent/100)*ow + (1-oa_percent/100)*ow
--- pws mixed_t = findSatVaporPressure mixed_T
-mixed_h mw mt = findEnthalpy mw mt
+outside_w model =
+    let
+        pw_star model = findSatVaporPressure model.oa_wb
+        w_star model = findHumidity (pw_star model) p
+    in
+        ((1093 - 0.556*model.oa_wb)*(w_star model) - 0.24*(model.oa_t - model.oa_wb))/(1093 + 0.444*model.oa_t - model.oa_wb)
 
--- supply_rh supply_t = if supply_t<60 then
---                           95
---                       else
---                           95 - (supply_T - 60)*3
 
--- pw supply_rh supply_t = (supply_rh/100)*(findSatVaporPressure supply_T)
+supply_rh supply_t = if supply_t<60 then
+                          95
+                      else
+                          95 - (supply_t - 60)*3
+
 
 supply_w rh t p = findHumidity (pw rh t) p
 -- supply_h supply_w supply_t= findEnthalpy supply_w supply_t
