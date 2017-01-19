@@ -8,6 +8,7 @@ import Html.Events exposing (onClick)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Time exposing (Time, second)
+import AhuModel exposing (..)
 
 main =
   Html.program { init = init
@@ -15,48 +16,6 @@ main =
                , subscriptions = subscriptions
                , view = view
                }
-
-
-type alias Model = { sa_t : Float -- supply air temperature
-                   , oa_p : Float --outsdie air percent
-                   , cfm : Float -- supply air flow rate
-                   , oa_t : Float -- outside air temprature
-                   , oa_wb : Float -- outside air web bulb, function of outside humidity
-                   , tons : Float -- building cooling load
-                   , shf : Float -- sensible heat factor qsense/qtotal
-                   , cycle : Int
-                   , time : Float
-                   , room_rh : Float -- room relative humidity
-                   , room_t : Float -- room temperature
-                   , room_h : Float -- room enthalpy
-                   }
-
-init : (Model, Cmd Msg)
-init = (
-        { sa_t = 62
-        , oa_p = 30
-        , cfm = 30000
-        , oa_t = 90
-        , oa_wb = 84
-        , tons = 65
-        , shf = 0.90
-        , cycle = 10
-        , time = 0
-        , room_rh = 50
-        , room_t = 80
-        , room_h = 0.015
-        }
-       , Cmd.none)
-
-type Msg = IncrementOap (Model->Float) Float
-         | IncrementSat (Model->Float) Float
-         | IncrementCfm (Model->Float) Float
-         | IncrementOat (Model->Float) Float
-         | IncrementOawb (Model->Float) Float
-         | IncrementTons (Model->Float) Float
-         | IncrementShf (Model->Float) Float
-         | IncrementCycle (Model->Int) Int
-         | Tick Time
 
 
 time_mod : Time -> Model -> Float
@@ -81,7 +40,7 @@ update msg model =
                         IncrementShf f dd -> { model | shf = (Basics.max 0.5 (Basics.min 1.0 (f model + dd)))}
                         IncrementCycle f dd -> { model | cycle = f model + dd}
                         Tick newTime -> { model | time = time_mod newTime model
-                                              , room_rh = new_room_t model
+                                              , room_rh = new_room_rel_humidity model
                                               , room_t = new_room_t model}
     in
         (new_model, Cmd.none)
@@ -100,14 +59,14 @@ view model =
   div []
       [ Html.text "Adjust system"
       , div [blueStyle]
-          [ control IncrementOap .oa_p 5 "OA %" model
-          , control IncrementSat .sa_t 1 "SA T" model
+          [ control IncrementOap .oa_p 5 "Outside Air %" model
+          , control IncrementSat .sa_t 1 "Supply Air Temp" model
           , control IncrementCfm .cfm 1000 "CFM" model
           ]
       , Html.text "Adjust weather"
       , div [redStyle]
-          [ control IncrementOat .oa_t 1 "OA T" model
-          , control IncrementOawb .oa_wb 3 "OA WB" model
+          [ control IncrementOat .oa_t 1 "Outside Air Temp" model
+          , control IncrementOawb .oa_wb 3 "Outside Air Wet Bulb" model
           ]
       , Html.text "Adjust load"
       , div [grayStyle]
@@ -169,16 +128,14 @@ house model =
         ]
 
 
-p = 14.696 -- barometric pressure in psia
-
 
 protractor : Float -> Float -> Model -> List ( Svg msg)
 protractor t u model =
     let
         w = 20
         shf = model.shf
-        room_abs_hum = findHumidity (pw model.room_rh model.room_t) p
-        q_in = total_heat_flow model.cfm room_abs_hum model.room_t (abs_w (pw model.room_rh model.sa_t) p) model.sa_t
+        room_abs_hum = abs_humidity model.room_rh model.room_t pressure
+        q_in = total_heat_flow model.cfm room_abs_hum model.room_t (abs_humidity model.room_rh model.sa_t pressure) model.sa_t
 -- sensible heat flow in
         shf_in = cool_supply model / q_in
         x_1 = t
@@ -237,6 +194,13 @@ air_state th clr label d_x d_y =
         , Svg.text_ [ x (toString x_1), y (toString y_1), dx d_x, dy d_y, fontSize "10" ] [ Html.text label ]
         ]
 
+mixed_th model = avg (room_th model) (outside_th model) (model.oa_p/100)
+
+room_th model = (model.room_t, abs_humidity  model.room_rh model.room_t pressure )
+
+sa_th model = (model.sa_t, abs_humidity (supply_rel_humidity model.sa_t) model.sa_t pressure)
+
+outside_th model = (model.oa_t, abs_humidity model.oa_wb model.oa_t pressure )
 
 avg : (Float,Float) -> (Float,Float) -> Float -> (Float,Float)
 avg xy1 xy2 t =
@@ -262,27 +226,6 @@ avg_color c1 c2 t =
         b2 = toFloat (Color.toRgb c2).blue
     in
         "#" ++ avg_int r1 r2 t ++ avg_int g1 g2 t ++ avg_int b1 b2 t
-
-
-mixed_th model =
-    let
-        (rt, rh) = room_th model
-        (ot, oh) = outside_th model
-        pp = model.oa_p
-    in
-        ( (pp*ot + (100-pp)*rt)/100
-        , (pp*oh + (100-pp)*rh)/100
-        )
-
-
-room_th model = (model.room_t, findHumidity (pw model.room_rh model.room_t) p )
-
-
-sa_th model = (model.sa_t, findHumidity (pw (supply_rh model.sa_t) model.sa_t) p)
-
-
-outside_th model = (model.oa_t, findHumidity (pw model.oa_wb model.oa_t) p )
-
 
 type alias Sprites = { recirc_th : (Float,Float)
                      , oa_th : (Float,Float)
@@ -390,139 +333,6 @@ grayStyle = Html.Attributes.style
         [ ( "font-family", "-apple-system, system, sans-serif" )
         , ( "background-color", "#999999" )
         ]
-
--- p = 14.696  -- barometric pressure in psia
--- room_T = 80      -- temperature in Farenheit
--- supply_T = 56      -- temperature in Farenheit
--- mixed_T = 83      -- temperature in Farenheit
--- outside_T = 90      -- temperature in Farenheit
--- room_rh = 50      -- relative humidity, percentage
--- supply_rh = 95      -- relative humidity, percentage
--- mixed_rh = 47      -- relative humidity, percentage
--- twb = 84      -- outside wet bulb temperature {related to outside relative humidity}
--- room_w = 0.011      -- pounds water vapor per pound dry air
--- supply_w = 0.0095      -- pounds water vapor per pound dry air
--- mixed_w = 0.0152      -- pounds water vapor per pound dry air
--- outside_w = 0.024      -- pounds water vapor per pound dry air
--- room_h = 31.2      -- enthalpy in BTUs per pound
--- supply_h = 23.7      -- enthalpy in BTUs per pound
--- mixed_h = 36.3      -- enthalpy in BTUs per pound
--- outside_h = 48.2      -- enthalpy in BTUs per pound
--- oa_percent = 30      -- percent of outside air
--- sa_cfm = 30000      -- supply air flow rate
--- q = 80      -- load in tons
--- shf = 0.9      -- sensible heat factor [dimensionless]
-
-findSatVaporPressure farenheit_temperature =
--- convert to Rankine
-    let t = farenheit_temperature + 459.67
-    in
-        -- sat vapor pressure
-        e^(-10440.4/t - 11.29465
-          - 0.027022355*t
-              + 1.289036e-5*t*t
-                  - 2.4780681e-9*t*t*t+6.5459673*logBase e t)
-
--- w is absolute humidity
--- t is temperature
-findEnthalpy w t = ((0.24+0.444*w)*t + 1061*w)
-
--- pw partial pressure of water
--- p absolute pressure of air
-findHumidity pw p = 0.62198*(pw/(p - pw))
-
--- pw partial pressure of water
-pw rel_humidity temperature = (rel_humidity/100)*(findSatVaporPressure temperature)
-
-
--- total heat flow in
-total_heat_flow sa_cfm room_w room_t supply_w supply_t= sa_cfm*60*(findEnthalpy room_w room_t - findEnthalpy supply_w supply_t)/(13.2*12000)
-
-
-cp = 0.241      -- specific heat of the air in the room in btu per (lb.deg F)
-
-
-btu_per_ton = 12000
-
-
--- sensible cool supply in tons
-cool_supply model = model.cfm*60*cp*(model.room_t - model.sa_t)/(13.2*btu_per_ton)
-
-
-new_room_t model = model.room_t + (((model.tons*model.shf - cool_supply model)*btu_per_ton/cp)/1000000.0)
-
-
-room_t old_room_t q shf cool_supply cp = old_room_t + (q*shf - cool_supply)/cp
-
-
--- absolute humidity of air
-abs_w pw p = findHumidity pw p
-
-
-room_h room_w room_t = findEnthalpy room_w room_t
-
-
-new_rh model =
-    let
-        q = model.tons
-        shf = model.shf
-        sa_cfm = model.cfm
-        (room_t, room_w) = room_th model
-        (supply_t, supply_w) = sa_th model
-    in
-        model.rh +
-            (q*(1-shf) - (room_w - supply_w)*sa_cfm*60*(1093 + 0.444*supply_t)/(13.2*12000))/100
-
-
-room_comment model =
-    let
-        room_rh = model.room_rh
-        room_t = model.room_t
-    in
-      if room_rh>60 then
-          "Ugh!  It's too humid."++(toString room_rh )
-      else if room_rh<30 then
-              "It's too dry."++(toString room_rh )
-          else if room_t>80 then
-                    "Whew!  It's too hot in here!"++(toString room_t )
-                else if room_t<70 then
-                        "Brrr!  It's too cold in here!"++(toString room_t )
-                    else
-                        ""
-
-outside_w model =
-    let
-        pw_star model = findSatVaporPressure model.oa_wb
-        w_star model = findHumidity (pw_star model) p
-    in
-        ((1093 - 0.556*model.oa_wb)*(w_star model) - 0.24*(model.oa_t - model.oa_wb))/(1093 + 0.444*model.oa_t - model.oa_wb)
-
-
-supply_rh supply_t = if supply_t<60 then
-                          95
-                      else
-                          95 - (supply_t - 60)*3
-
-
-supply_w rh t p = findHumidity (pw rh t) p
--- supply_h supply_w supply_t= findEnthalpy supply_w supply_t
-
-  -- updateFlowConditions
-    -- if (section == "right") {
-    --   flow_w = recirc_w = supply_w + (room_w - supply_w)*(counter*1.0/STEPS);//supply to room
-    --   flow_T = recirc_T = supply_T + (room_T - supply_T)*(counter*1.0/STEPS);//supply to room
-    -- } else if (section == "top") {
-    --   flow_w = recirc_w = room_w;//stay at room
-    --   flow_T = recirc_T = room_T;
-    -- } else if (section == "left") {
-    --   flow_w = outside_w + (mixed_w - outside_w)*(counter*1.0/STEPS);//outside to mixed
-    --   flow_T = outside_T + (mixed_T - outside_T)*(counter*1.0/STEPS);
-    --   recirc_w = room_w + (mixed_w - room_w)*(counter*1.0/STEPS);//room to mixed
-    --   recirc_T = room_T + (mixed_T - room_T)*(counter*1.0/STEPS);
-    -- } else if (section == "bottom") {
-    --   flow_w = recirc_w = mixed_w + (supply_w - mixed_w)*Math.pow(counter*1.0/STEPS,2);//mixed to supply quadratically
-    --   flow_T = recirc_T = mixed_T + (supply_T - mixed_T)*(counter*1.0/STEPS);
-    -- }
 toRadix : Int -> Int -> String
 toRadix r n =
   let
