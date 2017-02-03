@@ -37,7 +37,7 @@ update msg model =
                         IncrementOat f dd -> { model | oa_t = (Basics.max 65.0 (Basics.min 94.0 (f model + dd)))}
                         IncrementOawb f dd -> { model | oa_wb = (Basics.max 65.0 (Basics.min 94.0 (f model + dd)))}
                         IncrementTons f dd -> { model | tons = (Basics.max 40.0 (Basics.min 100.0 (f model + dd)))}
-                        IncrementShf f dd -> { model | shf = (Basics.max 0.5 (Basics.min 1.0 (f model + dd)))}
+                        IncrementShf f dd -> { model | shf = (Basics.max 0.0 (Basics.min 1.0 (f model + dd)))}
                         IncrementCycle f dd -> { model | cycle = f model + dd}
                         Tick newTime -> { model | time = time_mod newTime model
                                               , room_rh = new_room_rel_humidity model
@@ -49,6 +49,11 @@ update msg model =
 subscriptions : Model -> Sub Msg
 subscriptions model = Time.every (0.1 * second) Tick
 
+ctrl_style = Html.Attributes.style
+        [ ( "float", "left" )
+        , ( "width", "200px" )
+        , ( "display", "inline-block" )
+        ]
 
 view : Model -> Html Msg
 view model =
@@ -56,7 +61,8 @@ view model =
         pro_x = 250.0
         pro_y = 30
     in
-  div []
+  div [] [
+  div [ ctrl_style ]
       [ Html.text "Adjust system"
       , div [blueStyle]
           [ control IncrementOap .oa_p 5 "Outside Air %" model
@@ -71,18 +77,22 @@ view model =
       , Html.text "Adjust load"
       , div [grayStyle]
           [ control IncrementTons .tons 5 "Tons" model
-          , control IncrementShf .shf 0.05 "SHF" model
+          , control IncrementShf .shf 0.05 "SHF" model -- TODO: limit precision
           , control IncrementCycle .cycle 1 "sim cycle (seconds)" model
           , control IncrementShf .time 0.05 "Time" model
           ]
       , Html.text (room_comment model)
       , Html.p [] []
-      , svg [viewBox "0 0 600 400", Svg.Attributes.width "600px" ]
+      ]
+      , div [ Html.Attributes.style [ ( "margin-left", "200px")] ]
+      [ svg [viewBox "0 0 600 400", Svg.Attributes.width "600px" ]
             (List.concat [ (protractor pro_x pro_y model)
                          , house model
                          , psych_chart model])
       ]
+      ]
 
+-- TODO: DRAW THE BOX WITH THE COMFORT ZONE
 
 -- for drawing the house
 air_radius = 10
@@ -135,7 +145,9 @@ protractor t u model =
         w = 20
         shf = model.shf
         room_abs_hum = abs_humidity model.room_rh model.room_t pressure
-        q_in = total_heat_flow model.cfm room_abs_hum model.room_t (abs_humidity model.room_rh model.sa_t pressure) model.sa_t
+        supply_rel_hum = 0.95
+        supply_abs_hum = abs_humidity supply_rel_hum model.sa_t pressure
+        q_in = total_heat_flow model.cfm room_abs_hum model.room_t supply_abs_hum model.sa_t
 -- sensible heat flow in
         shf_in = cool_supply model / q_in
         x_1 = t

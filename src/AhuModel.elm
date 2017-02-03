@@ -6,7 +6,7 @@ type alias Model = { sa_t : Float -- supply air temperature
                    , cfm : Float -- supply air flow rate, cubic feet per minute
                    , oa_t : Float -- outside air temperature in Fahrenheit
                    , oa_wb : Float -- outside air web bulb, function of outside humidity
-                   , tons : Float -- building cooling load, tons of ice melting per ???
+                   , tons : Float -- building cooling load, tons of ice melting per day
                    , shf : Float -- sensible heat factor qsense/qtotal, dimensionless from 0.0 to 1.0
                    , cycle : Int
                    , time : Float -- value between 0.0 and 1.0
@@ -67,9 +67,16 @@ abs_humidity rel_humidity temperature air_partial_pressure =
         0.62198*(h2o_partial_pressure/(air_partial_pressure - h2o_partial_pressure))
 
 
+cfpp = 13.2 -- cubic_ft_per_pound
+mph = 60 -- 60 minutes per hour
 
 -- total heat flow in
-total_heat_flow sa_cfm room_w room_t supply_w supply_t= sa_cfm*60*(enthalpy room_w room_t - enthalpy supply_w supply_t)/(13.2*12000)
+total_heat_flow sa_cfm room_w room_t supply_w supply_t=
+  let
+    room_h = enthalpy room_w room_t -- btu per pound
+    supply_h = enthalpy supply_w supply_t
+  in
+    sa_cfm*mph*(room_h - supply_h)/(cfpp*btu_per_ton)
 
 -- btu per (lb.deg F)
 air_specific_heat = 0.241
@@ -77,13 +84,12 @@ air_specific_heat = 0.241
 
 btu_per_ton = 12000
 
-
 -- sensible cool supply in tons
 cool_supply model =
     let
         cp = air_specific_heat
     in
-        model.cfm*60*cp*(model.room_t - model.sa_t)/(13.2*btu_per_ton)
+        model.cfm*60*cp*(model.room_t - model.sa_t)/(cfpp*btu_per_ton)
 
 
 new_room_t model =
@@ -106,9 +112,10 @@ new_room_rel_humidity model =
         room_w = abs_humidity model.room_rh model.room_t pressure
         supply_t = model.sa_t
         supply_w = abs_humidity (supply_rel_humidity model.sa_t) model.sa_t pressure
+        something = (1093 - 0.444*supply_t)/(13.2*12000)
     in
         model.room_rh +
-            (q*(1-shf) - (room_w - supply_w)*sa_cfm*60*(1093 + 0.444*supply_t)/(13.2*12000))/100
+            (q*(1-shf) - (room_w - supply_w)*sa_cfm*60*something)/100
 
 
 room_comment model =
