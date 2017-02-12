@@ -1,14 +1,16 @@
 module Ahu exposing (..)
 
+import AhuModel exposing (..)
+import AhuText exposing (ahutext)
 import Char exposing (..)
 import Color exposing (..)
 import Html exposing (Html, div, button, text, label)
 import Html.Attributes exposing (style, placeholder)
 import Html.Events exposing (onClick)
+import Markdown exposing (..)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Time exposing (Time, second)
-import AhuModel exposing (..)
 
 main =
   Html.program { init = init
@@ -94,6 +96,9 @@ view model =
             (List.concat [ (protractor pro_x pro_y model)
                          , house model
                          , psych_chart model])
+      ]
+      , div [ Html.Attributes.style [ ( "float", "right"), ("display", "inline-block")] ]
+      [ Markdown.toHtml [] ahutext
       ]
       ]
 
