@@ -8,7 +8,7 @@ type alias Model = { sa_t : Float -- supply air temperature
                    , oa_wb : Float -- outside air web bulb, function of outside humidity
                    , tons : Float -- building cooling load, tons of ice melting per day
                    , shf : Float -- sensible heat factor qsense/qtotal, dimensionless from 0.0 to 1.0
-                   , cycle : Int
+                   , cycle : Float
                    , time : Float -- value between 0.0 and 1.0
                    , room_rh : Float -- room relative humidity percentage, from 0.0 to 100.0
                    , room_t : Float -- room temperature in Fahrenheit
@@ -39,7 +39,7 @@ type Msg = IncrementOap (Model->Float) Float
          | IncrementOawb (Model->Float) Float
          | IncrementTons (Model->Float) Float
          | IncrementShf (Model->Float) Float
-         | IncrementCycle (Model->Int) Int
+         | IncrementCycle (Model->Float) Float
          | Tick Time
 
 pressure = 14.696 -- barometric pressure in psia
@@ -124,13 +124,13 @@ room_comment model =
         room_t = model.room_t
     in
       if room_rh>60 then
-          "Ugh!  It's too humid."++(toString room_rh )
+          "Ugh!  It's too humid. "++(toString <| roundn 2 <| room_rh )
       else if room_rh<30 then
-              "It's too dry."++(toString room_rh )
+              "It's too dry. "++(toString room_rh )
           else if room_t>80 then
-                    "Whew!  It's too hot in here!"++(toString room_t )
+                    "Whew!  It's too hot in here! "++(toString <| roundn 2 <| room_t )
                 else if room_t<70 then
-                        "Brrr!  It's too cold in here!"++(toString room_t )
+                        "Brrr!  It's too cold in here! "++(toString <| roundn 2 <| room_t )
                     else
                         ""
 
@@ -149,3 +149,13 @@ supply_rel_humidity supply_t = if supply_t<60 then
 
 
 supply_w rh t p = abs_humidity  rh t p
+
+roundn : Int -> Float -> Float
+roundn n x =
+    let
+        f = toFloat ( 10^n )
+        hundred = f*x
+        fh = toFloat (round hundred)
+    in
+        -- toFloat (round (x*f))/f
+        fh/f

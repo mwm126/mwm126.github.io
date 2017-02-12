@@ -22,7 +22,7 @@ time_mod : Time -> Model -> Float
 time_mod time model =
     let
         t = Time.inSeconds time
-        ct = toFloat model.cycle
+        ct = model.cycle
     in
         (t - ct*(toFloat (floor(t/ct))))/ct
 
@@ -60,6 +60,8 @@ view model =
     let
         pro_x = 250.0
         pro_y = 30
+        r2 x = toString <| roundn 2 x
+        show name value = Html.text (name ++ " = " ++ r2 value)
     in
   div [] [
   div [ ctrl_style ]
@@ -81,8 +83,11 @@ view model =
           , control IncrementCycle .cycle 1 "sim cycle (seconds)" model
           , control IncrementShf .time 0.05 "Time" model
           ]
-      , Html.text (room_comment model)
-      , Html.p [] []
+      , Html.text (room_comment model), Html.p [] []
+      -- , show "room_t" model.room_t, Html.p [] []
+      -- , show "shf_in" shf_in, Html.p [] []
+      -- , show "q_in" q_in, Html.p [] []
+      -- , show "room_abs_hum" room_abs_hum, Html.p [] []
       ]
       , div [ Html.Attributes.style [ ( "margin-left", "200px")] ]
       [ svg [viewBox "0 0 600 400", Svg.Attributes.width "600px" ]
@@ -137,7 +142,18 @@ house model =
         , pie rx ry 10 -0.25 (1.0-model.oa_p/100-0.25) (sprite_states model).air_color
         ]
 
-
+debug model shf_in q_in room_abs_hum =
+    let
+        r2 x = toString <| roundn 2 x
+        show name value = Html.text (name ++ r2 value)
+    in
+        div [grayStyle] [
+             show "room_t" model.room_t
+            ]
+    -- Html.text ("room_t = " ++ r2 model.room_t ++
+    --                " shf_in="++r2 shf_in ++
+    --                " q_in="++r2 q_in ++
+    --                " room_abs_hum =" ++ r2 room_abs_hum )
 
 protractor : Float -> Float -> Model -> List ( Svg msg)
 protractor t u model =
@@ -161,10 +177,7 @@ protractor t u model =
         [ pieline x_1 y_1 (round model.tons) 0 0.5
             -- room center
         -- , Svg.text_ [ x (toString x_1), y (toString y_1), dx "5", dy "-5", fontSize "10"   ] [ Html.text "Cooling Vectors (BTU/Hr)" ]
-        , Svg.text_ [ x (toString x_1), y (toString y_1), dx "5", dy "-5", fontSize "10"   ] [ Html.text ("room_t = " ++ (toString model.room_t) ++
-                                                                                                              " shf_in="++(toString shf_in) ++
-                                                                                                              " q_in="++(toString q_in) ++
-                                                                                                              " room_abs_hum =" ++ (toString room_abs_hum ))]
+        , Svg.text_ [ x (toString x_1), y (toString y_1), dx "5", dy "-5", fontSize "10"   ] [ debug model shf_in q_in room_abs_hum ]
         , circle [ cx (toString x_1), cy (toString y_1), r "4", fill "green" ] [ ]
         , Svg.text_ [ x (toString x_1), y (toString y_1), dx "5", dy "5", fontSize "10"   ] [ Html.text "room" ]
             -- load vector
@@ -177,23 +190,15 @@ protractor t u model =
         , Svg.text_ [ x (toString x_3), y (toString y_3), dx "5", dy "5", fontSize "10"   ] [ Html.text "supply" ]
 -- protractor
         ]
-saturation_line : List (Float, Float)
-saturation_line = [ (40.0, 0.0052)
-                  , (45.0, 0.0063)
-                  , (50.0, 0.0076)
-                  , (55.0, 0.0092)
-                  , (60.0, 0.0112)
-                  , (65.0, 0.0132)
-                  , (70.0, 0.0158)
-                  , (75.0, 0.0188)
-                  , (80.0, 0.0223)
-                  , (85.0, 0.0264)
-                  , (90.0, 0.029)
-                  , (95.0, 0.029)
-                  ]
 
 th_to_xy : (Float,Float) -> (Float,Float)
-th_to_xy (t,h) = ((t - 40)*(toFloat bottom-100)/(95-40) + 100, (0.029-h)*(toFloat bottom-100)/(0.029-0.0052) + 100)
+
+
+th_to_xy (t,h) =
+    let
+        bottom = 400
+    in
+        ((t - 40)*(toFloat bottom-100)/(95-40) + 100, (0.029-h)*(toFloat bottom-100)/(0.029-0.0052) + 100)
 
 
 air_state : (Float,Float) -> String -> String -> String -> String -> List (Svg msg)
@@ -301,12 +306,24 @@ sprite_states model =
                   }
 
 
-bottom = 400
-
 
 psych_chart : Model -> List (Svg msg)
 psych_chart model =
     let
+        saturation_line : List (Float, Float)
+        saturation_line = [ (40.0, 0.0052)
+                          , (45.0, 0.0063)
+                          , (50.0, 0.0076)
+                          , (55.0, 0.0092)
+                          , (60.0, 0.0112)
+                          , (65.0, 0.0132)
+                          , (70.0, 0.0158)
+                          , (75.0, 0.0188)
+                          , (80.0, 0.0223)
+                          , (85.0, 0.0264)
+                          , (90.0, 0.029)
+                          , (95.0, 0.029)
+                          ]
         p_horiz (x,y) = line [ x1 (toString x), y1 (toString y), x2 (toString 1000), y2 (toString y), stroke "black" ] []
         p_vert (x,y) = line [ x1 (toString x), y1 (toString y), x2 (toString x), y2 (toString 1000), stroke "black" ] []
     in
@@ -323,7 +340,7 @@ psych_chart model =
 
 control inc get diff label model = div []
                              [ button [ onClick (inc get -diff) ] [ Html.text "-" ]
-                             , div [inlineStyle] [ Html.text (label ++ " " ++ (toString (get model))) ]
+                             , div [inlineStyle] [ Html.text (label ++ " " ++ (toString (roundn 2 (get model)))) ]
                              , button [ onClick (inc get diff) ] [ Html.text "+" ]
                              ]
 
