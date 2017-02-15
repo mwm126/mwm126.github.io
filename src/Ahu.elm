@@ -65,41 +65,43 @@ view model =
         r2 x = toString <| roundn 2 x
         show name value = Html.text (name ++ " = " ++ r2 value)
     in
-  div [] [
-  div [ ctrl_style ]
-      [ Html.text "Adjust system"
-      , div [blueStyle]
-          [ control IncrementOap .oa_p 5 "Outside Air %" model
-          , control IncrementSat .sa_t 1 "Supply Air Temp" model
-          , control IncrementCfm .cfm 1000 "CFM" model
+  Html.article [] [
+       Html.section [ Html.Attributes.style [ ( "float", "left"), ("width", "50%"), ("position", "fixed")] ] [
+            div [ ctrl_style ]
+                [ Html.text "Adjust system"
+                , div [blueStyle]
+                    [ control IncrementOap .oa_p 5 "Outside Air %" model
+                    , control IncrementSat .sa_t 1 "Supply Air Temp" model
+                    , control IncrementCfm .cfm 1000 "CFM" model
+                    ]
+                , Html.text "Adjust weather"
+                , div [redStyle]
+                    [ control IncrementOat .oa_t 1 "Outside Air Temp" model
+                    , control IncrementOawb .oa_wb 3 "Outside Air Wet Bulb" model
+                    ]
+                , Html.text "Adjust load"
+                , div [grayStyle]
+                    [ control IncrementTons .tons 5 "Tons" model
+                    , control IncrementShf .shf 0.05 "SHF" model -- TODO: limit precision
+                    , control IncrementCycle .cycle 1 "sim cycle (seconds)" model
+                    , control IncrementShf .time 0.05 "Time" model
+                    ]
+                , Html.text (room_comment model), Html.p [] []
+                -- , show "room_t" model.room_t, Html.p [] []
+                -- , show "shf_in" shf_in, Html.p [] []
+                -- , show "q_in" q_in, Html.p [] []
+                -- , show "room_abs_hum" room_abs_hum, Html.p [] []
+                ]
+           , div [ Html.Attributes.style [ ( "margin-left", "100px")] ]
+                [ svg [viewBox "0 0 600 400", Svg.Attributes.width "60%" ]
+                      (List.concat [ (protractor pro_x pro_y model)
+                                   , house model
+                                   , psych_chart model])
+                ]
+           ]
+      , Html.section [ Html.Attributes.style [ ( "float", "right"), ("width", "50%"), ("overflow-y", "scroll")] ]
+          [ Html.article [] [ Markdown.toHtml [] ahutext ]
           ]
-      , Html.text "Adjust weather"
-      , div [redStyle]
-          [ control IncrementOat .oa_t 1 "Outside Air Temp" model
-          , control IncrementOawb .oa_wb 3 "Outside Air Wet Bulb" model
-          ]
-      , Html.text "Adjust load"
-      , div [grayStyle]
-          [ control IncrementTons .tons 5 "Tons" model
-          , control IncrementShf .shf 0.05 "SHF" model -- TODO: limit precision
-          , control IncrementCycle .cycle 1 "sim cycle (seconds)" model
-          , control IncrementShf .time 0.05 "Time" model
-          ]
-      , Html.text (room_comment model), Html.p [] []
-      -- , show "room_t" model.room_t, Html.p [] []
-      -- , show "shf_in" shf_in, Html.p [] []
-      -- , show "q_in" q_in, Html.p [] []
-      -- , show "room_abs_hum" room_abs_hum, Html.p [] []
-      ]
-      , div [ Html.Attributes.style [ ( "margin-left", "200px")] ]
-      [ svg [viewBox "0 0 600 400", Svg.Attributes.width "600px" ]
-            (List.concat [ (protractor pro_x pro_y model)
-                         , house model
-                         , psych_chart model])
-      ]
-      , div [ Html.Attributes.style [ ( "float", "right"), ("display", "inline-block")] ]
-      [ Markdown.toHtml [] ahutext
-      ]
       ]
 
 -- TODO: DRAW THE BOX WITH THE COMFORT ZONE

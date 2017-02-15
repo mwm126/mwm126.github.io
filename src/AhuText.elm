@@ -3,7 +3,8 @@ module AhuText exposing (ahutext)
 ahutext = """
 Volume 3 No.2, Spring 1999
 ISSN# 1523-9926
-Simulating the performance of an Air Handling Unit on a Psychrometric Chart
+
+# Simulating the performance of an Air Handling Unit on a Psychrometric Chart
 
 By
 
@@ -68,7 +69,7 @@ supplied by the cooling system. Equilibrium exists when these two vectors are
 concentric.
 
 
-Control Panel and Limitations
+# Control Panel and Limitations
 
 The lower left window on the screen contains the control panel where the user
 can modify various parameters. These are grouped into several related functions.
