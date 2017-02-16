@@ -64,6 +64,9 @@ view model =
         pro_y = 30
         r2 x = toString <| roundn 2 x
         show name value = Html.text (name ++ " = " ++ r2 value)
+
+        q_in = q_inflow model
+        shf_in = shf_inflow model
     in
   Html.article [] [
        Html.section [ Html.Attributes.style [ ( "float", "left"), ("width", "50%"), ("position", "fixed")] ] [
@@ -87,10 +90,10 @@ view model =
                     , control IncrementShf .time 0.05 "Time" model
                     ]
                 , Html.text (room_comment model), Html.p [] []
-                -- , show "room_t" model.room_t, Html.p [] []
-                -- , show "shf_in" shf_in, Html.p [] []
-                -- , show "q_in" q_in, Html.p [] []
-                -- , show "room_abs_hum" room_abs_hum, Html.p [] []
+                , show "room_t" model.room_t, Html.p [] []
+                , show "shf_in" shf_in, Html.p [] []
+                , show "q_in" q_in, Html.p [] []
+                , show "room_abs_hum" <| room_abs_hum model, Html.p [] []
                 ]
            , div [ Html.Attributes.style [ ( "margin-left", "100px")] ]
                 [ svg [viewBox "0 0 600 400", Svg.Attributes.width "60%" ]
@@ -103,8 +106,6 @@ view model =
           [ Html.article [] [ Markdown.toHtml [] ahutext ]
           ]
       ]
-
--- TODO: DRAW THE BOX WITH THE COMFORT ZONE
 
 -- for drawing the house
 air_radius = 10
@@ -167,12 +168,9 @@ protractor t u model =
     let
         w = 20
         shf = model.shf
-        room_abs_hum = abs_humidity model.room_rh model.room_t pressure
-        supply_rel_hum = 0.95
-        supply_abs_hum = abs_humidity supply_rel_hum model.sa_t pressure
-        q_in = total_heat_flow model.cfm room_abs_hum model.room_t supply_abs_hum model.sa_t
+        q_in = q_inflow model
+        shf_in = shf_inflow model
 -- sensible heat flow in
-        shf_in = cool_supply model / q_in
         x_1 = t
         y_1 = u
         x_2 = t - model.tons*sin(shf*pi/2)
@@ -199,7 +197,6 @@ protractor t u model =
         ]
 
 th_to_xy : (Float,Float) -> (Float,Float)
-
 
 th_to_xy (t,h) =
     let
@@ -331,8 +328,21 @@ psych_chart model =
                           , (90.0, 0.029)
                           , (95.0, 0.029)
                           ]
-        p_horiz (x,y) = line [ x1 (toString x), y1 (toString y), x2 (toString 1000), y2 (toString y), stroke "black" ] []
-        p_vert (x,y) = line [ x1 (toString x), y1 (toString y), x2 (toString x), y2 (toString 1000), stroke "black" ] []
+        -- make_line takes pairs of (temperature, humidity) and transforms to pixels
+        make_line c (x,y) (xx,yy) = line [ x1 (toString x), y1 (toString y), x2 (toString xx), y2 (toString yy), stroke c ] []
+        p_horiz (x,y) = make_line "black" (x,y) (1000,y)
+        p_vert (x,y) = make_line "black" (x,y) (x,1000)
+        r = "blue"
+        some_temperature = 50 -- I don't know what this should be
+        c1 = th_to_xy (comfort_temp_min, abs_humidity comfort_rh_min comfort_temp_min pressure)
+        c2 = th_to_xy (comfort_temp_min, abs_humidity comfort_rh_max comfort_temp_min pressure)
+        c3 = th_to_xy (comfort_temp_max, abs_humidity comfort_rh_max comfort_temp_max pressure)
+        c4 = th_to_xy (comfort_temp_max, abs_humidity comfort_rh_min comfort_temp_max pressure)
+        comfort_zone = [ make_line r c1 c2
+                       , make_line r c2 c3
+                       , make_line r c3 c4
+                       , make_line r c4 c1
+                       ]
     in
         List.concat [ List.map p_horiz (List.map th_to_xy saturation_line)
                     , List.map p_vert  (List.map th_to_xy saturation_line)
@@ -343,6 +353,7 @@ psych_chart model =
                                   , air_state (.oa_th (sprite_states model)) "black" "OA" "15" "15"
                                   , air_state (.recirc_th (sprite_states model)) "black" "recirc" "15" "-5"
                                   ]
+                    , comfort_zone
                     ]
 
 control inc get diff label model = div []

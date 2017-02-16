@@ -71,12 +71,27 @@ cfpp = 13.2 -- cubic_ft_per_pound
 mph = 60 -- 60 minutes per hour
 
 -- total heat flow in
-total_heat_flow sa_cfm room_w room_t supply_w supply_t=
+total_heat_flow sa_cfm room_w room_t supply_w supply_t =
   let
     room_h = enthalpy room_w room_t -- btu per pound
     supply_h = enthalpy supply_w supply_t
   in
     sa_cfm*mph*(room_h - supply_h)/(cfpp*btu_per_ton)
+
+a = total_heat_flow 1.0 1.0 1.0 1.0 1.0
+
+
+room_abs_hum model = abs_humidity model.room_rh model.room_t pressure
+supply_rel_hum = 0.95
+supply_abs_hum model = abs_humidity supply_rel_hum model.sa_t pressure
+q_inflow model =
+    let
+        room_ah = room_abs_hum model
+        supply_ah = supply_abs_hum model
+    in
+        total_heat_flow model.cfm room_ah model.room_t supply_ah model.sa_t
+
+shf_inflow model = cool_supply model / (q_inflow model)
 
 -- btu per (lb.deg F)
 air_specific_heat = 0.241
@@ -117,19 +132,23 @@ new_room_rel_humidity model =
         model.room_rh +
             (q*(1-shf) - (room_w - supply_w)*sa_cfm*60*something)/100
 
+comfort_temp_max = 80
+comfort_temp_min = 70
+comfort_rh_max = 60
+comfort_rh_min = 30
 
 room_comment model =
     let
         room_rh = model.room_rh
         room_t = model.room_t
     in
-      if room_rh>60 then
+      if room_rh > comfort_rh_max then
           "Ugh!  It's too humid. "++(toString <| roundn 2 <| room_rh )
-      else if room_rh<30 then
+      else if room_rh < comfort_rh_min then
               "It's too dry. "++(toString room_rh )
-          else if room_t>80 then
+          else if room_t > comfort_temp_max then
                     "Whew!  It's too hot in here! "++(toString <| roundn 2 <| room_t )
-                else if room_t<70 then
+                else if room_t < comfort_temp_min then
                         "Brrr!  It's too cold in here! "++(toString <| roundn 2 <| room_t )
                     else
                         ""
