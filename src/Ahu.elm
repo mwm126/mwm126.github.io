@@ -53,7 +53,7 @@ subscriptions model = Time.every (0.1 * second) Tick
 
 ctrl_style = Html.Attributes.style
         [ ( "float", "left" )
-        , ( "width", "200px" )
+        , ( "width", "30%" )
         , ( "display", "inline-block" )
         ]
 
@@ -357,9 +357,9 @@ psych_chart model =
                     ]
 
 control inc get diff label model = div []
-                             [ button [ onClick (inc get -diff) ] [ Html.text "-" ]
-                             , div [inlineStyle] [ Html.text (label ++ " " ++ (toString (roundn 2 (get model)))) ]
-                             , button [ onClick (inc get diff) ] [ Html.text "+" ]
+                             [ button [ onClick (inc get -diff), Html.Attributes.style [("float", "left")] ] [ Html.text "-" ]
+                             , Html.text (label ++ " " ++ (toString (roundn 2 (get model))))
+                             , button [ onClick (inc get diff), Html.Attributes.style [("float", "right")] ] [ Html.text "+" ]
                              ]
 
 inlineStyle = Html.Attributes.style
