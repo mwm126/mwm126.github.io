@@ -1563,8 +1563,7 @@ function toString(v)
 	var type = typeof v;
 	if (type === 'function')
 	{
-		var name = v.func ? v.func.name : v.name;
-		return '<function' + (name === '' ? '' : ':') + name + '>';
+		return '<function>';
 	}
 
 	if (type === 'boolean')
@@ -2067,6 +2066,13 @@ return {
 var _elm_lang$core$List$sortBy = _elm_lang$core$Native_List.sortBy;
 var _elm_lang$core$List$sort = function (xs) {
 	return A2(_elm_lang$core$List$sortBy, _elm_lang$core$Basics$identity, xs);
+};
+var _elm_lang$core$List$singleton = function (value) {
+	return {
+		ctor: '::',
+		_0: value,
+		_1: {ctor: '[]'}
+	};
 };
 var _elm_lang$core$List$drop = F2(
 	function (n, list) {
@@ -3675,15 +3681,8 @@ function setupIncomingPort(name, callback)
 		sentBeforeInit.push(value);
 	}
 
-	function postInitSend(incomingValue)
+	function postInitSend(value)
 	{
-		var result = A2(_elm_lang$core$Json_Decode$decodeValue, converter, incomingValue);
-		if (result.ctor === 'Err')
-		{
-			throw new Error('Trying to send an unexpected type of value through port `' + name + '`:\n' + result._0);
-		}
-
-		var value = result._0;
 		var temp = subs;
 		while (temp.ctor !== '[]')
 		{
@@ -3694,7 +3693,13 @@ function setupIncomingPort(name, callback)
 
 	function send(incomingValue)
 	{
-		currentSend(incomingValue);
+		var result = A2(_elm_lang$core$Json_Decode$decodeValue, converter, incomingValue);
+		if (result.ctor === 'Err')
+		{
+			throw new Error('Trying to send an unexpected type of value through port `' + name + '`:\n' + result._0);
+		}
+
+		currentSend(result._0);
 	}
 
 	return { send: send };
@@ -4308,7 +4313,7 @@ function endsWith(sub, str)
 function indexes(sub, str)
 {
 	var subLen = sub.length;
-	
+
 	if (subLen < 1)
 	{
 		return _elm_lang$core$Native_List.Nil;
@@ -4321,74 +4326,78 @@ function indexes(sub, str)
 	{
 		is.push(i);
 		i = i + subLen;
-	}	
-	
+	}
+
 	return _elm_lang$core$Native_List.fromArray(is);
 }
+
 
 function toInt(s)
 {
 	var len = s.length;
+
+	// if empty
 	if (len === 0)
 	{
-		return _elm_lang$core$Result$Err("could not convert string '" + s + "' to an Int" );
+		return intErr(s);
 	}
-	var start = 0;
-	if (s[0] === '-')
+
+	// if hex
+	var c = s[0];
+	if (c === '0' && s[1] === 'x')
 	{
-		if (len === 1)
+		for (var i = 2; i < len; ++i)
 		{
-			return _elm_lang$core$Result$Err("could not convert string '" + s + "' to an Int" );
+			var c = s[i];
+			if (('0' <= c && c <= '9') || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f'))
+			{
+				continue;
+			}
+			return intErr(s);
 		}
-		start = 1;
+		return _elm_lang$core$Result$Ok(parseInt(s, 16));
 	}
-	for (var i = start; i < len; ++i)
+
+	// is decimal
+	if (c > '9' || (c < '0' && c !== '-' && c !== '+'))
+	{
+		return intErr(s);
+	}
+	for (var i = 1; i < len; ++i)
 	{
 		var c = s[i];
 		if (c < '0' || '9' < c)
 		{
-			return _elm_lang$core$Result$Err("could not convert string '" + s + "' to an Int" );
+			return intErr(s);
 		}
 	}
+
 	return _elm_lang$core$Result$Ok(parseInt(s, 10));
 }
 
+function intErr(s)
+{
+	return _elm_lang$core$Result$Err("could not convert string '" + s + "' to an Int");
+}
+
+
 function toFloat(s)
 {
-	var len = s.length;
-	if (len === 0)
+	// check if it is a hex, octal, or binary number
+	if (s.length === 0 || /[\sxbo]/.test(s))
 	{
-		return _elm_lang$core$Result$Err("could not convert string '" + s + "' to a Float" );
+		return floatErr(s);
 	}
-	var start = 0;
-	if (s[0] === '-')
-	{
-		if (len === 1)
-		{
-			return _elm_lang$core$Result$Err("could not convert string '" + s + "' to a Float" );
-		}
-		start = 1;
-	}
-	var dotCount = 0;
-	for (var i = start; i < len; ++i)
-	{
-		var c = s[i];
-		if ('0' <= c && c <= '9')
-		{
-			continue;
-		}
-		if (c === '.')
-		{
-			dotCount += 1;
-			if (dotCount <= 1)
-			{
-				continue;
-			}
-		}
-		return _elm_lang$core$Result$Err("could not convert string '" + s + "' to a Float" );
-	}
-	return _elm_lang$core$Result$Ok(parseFloat(s));
+	var n = +s;
+	// faster isNaN check
+	return n === n ? _elm_lang$core$Result$Ok(n) : floatErr(s);
 }
+
+function floatErr(s)
+{
+	return _elm_lang$core$Result$Err("could not convert string '" + s + "' to a Float");
+}
+
 
 function toList(str)
 {
@@ -5837,11 +5846,6 @@ function badToString(problem)
 				problem = problem.rest;
 				break;
 
-			case 'index':
-				context += '[' + problem.index + ']';
-				problem = problem.rest;
-				break;
-
 			case 'oneOf':
 				var problems = problem.problems;
 				for (var i = 0; i < problems.length; i++)
@@ -6565,9 +6569,9 @@ function on(name, options, decoder)
 
 function equalEvents(a, b)
 {
-	if (!a.options === b.options)
+	if (a.options !== b.options)
 	{
-		if (a.stopPropagation !== b.stopPropagation || a.preventDefault !== b.preventDefault)
+		if (a.options.stopPropagation !== b.options.stopPropagation || a.options.preventDefault !== b.options.preventDefault)
 		{
 			return false;
 		}
@@ -7843,7 +7847,7 @@ function normalRenderer(parentNode, view)
 var rAF =
 	typeof requestAnimationFrame !== 'undefined'
 		? requestAnimationFrame
-		: function(callback) { callback(); };
+		: function(callback) { setTimeout(callback, 1000 / 60); };
 
 function makeStepper(domNode, view, initialVirtualNode, eventNode)
 {
@@ -9140,25 +9144,178 @@ var _elm_lang$svg$Svg_Attributes$additive = _elm_lang$virtual_dom$VirtualDom$att
 var _elm_lang$svg$Svg_Attributes$accumulate = _elm_lang$virtual_dom$VirtualDom$attribute('accumulate');
 var _elm_lang$svg$Svg_Attributes$accelerate = _elm_lang$virtual_dom$VirtualDom$attribute('accelerate');
 var _elm_lang$svg$Svg_Attributes$accentHeight = _elm_lang$virtual_dom$VirtualDom$attribute('accent-height');
+var _evancz$elm_markdown$Native_Markdown = function() {
+
+
+// VIRTUAL-DOM WIDGETS
+
+function toHtml(options, factList, rawMarkdown)
+{
+	var model = {
+		options: options,
+		markdown: rawMarkdown
+	};
+	return _elm_lang$virtual_dom$Native_VirtualDom.custom(factList, model, implementation);
+}
+
+
+// WIDGET IMPLEMENTATION
+
+var implementation = {
+	render: render,
+	diff: diff
+};
+
+function render(model)
+{
+	var html = marked(model.markdown, formatOptions(model.options));
+	var div = document.createElement('div');
+	div.innerHTML = html;
+	return div;
+}
+
+function diff(a, b)
+{
+	
+	if (a.model.markdown === b.model.markdown && a.model.options === b.model.options)
+	{
+		return null;
+	}
+
+	return {
+		applyPatch: applyPatch,
+		data: marked(b.model.markdown, formatOptions(b.model.options))
+	};
+}
+
+function applyPatch(domNode, data)
+{
+	domNode.innerHTML = data;
+	return domNode;
+}
+
+
+// ACTUAL MARKDOWN PARSER
+
+var marked = function() {
+	// catch the `marked` object regardless of the outer environment.
+	// (ex. a CommonJS module compatible environment.)
+	// note that this depends on marked's implementation of environment detection.
+	var module = {};
+	var exports = module.exports = {};
+
+	/**
+	 * marked - a markdown parser
+	 * Copyright (c) 2011-2014, Christopher Jeffrey. (MIT Licensed)
+	 * https://github.com/chjj/marked
+	 */
+	(function(){var block={newline:/^\n+/,code:/^( {4}[^\n]+\n*)+/,fences:noop,hr:/^( *[-*_]){3,} *(?:\n+|$)/,heading:/^ *(#{1,6}) *([^\n]+?) *#* *(?:\n+|$)/,nptable:noop,lheading:/^([^\n]+)\n *(=|-){2,} *(?:\n+|$)/,blockquote:/^( *>[^\n]+(\n(?!def)[^\n]+)*\n*)+/,list:/^( *)(bull) [\s\S]+?(?:hr|def|\n{2,}(?! )(?!\1bull )\n*|\s*$)/,html:/^ *(?:comment|closed|closing) *(?:\n{2,}|\s*$)/,def:/^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +["(]([^\n]+)[")])? *(?:\n+|$)/,table:noop,paragraph:/^((?:[^\n]+\n?(?!hr|heading|lheading|blockquote|tag|def))+)\n*/,text:/^[^\n]+/};block.bullet=/(?:[*+-]|\d+\.)/;block.item=/^( *)(bull) [^\n]*(?:\n(?!\1bull )[^\n]*)*/;block.item=replace(block.item,"gm")(/bull/g,block.bullet)();block.list=replace(block.list)(/bull/g,block.bullet)("hr","\\n+(?=\\1?(?:[-*_] *){3,}(?:\\n+|$))")("def","\\n+(?="+block.def.source+")")();block.blockquote=replace(block.blockquote)("def",block.def)();block._tag="(?!(?:"+"a|em|strong|small|s|cite|q|dfn|abbr|data|time|code"+"|var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo"+"|span|br|wbr|ins|del|img)\\b)\\w+(?!:/|[^\\w\\s@]*@)\\b";block.html=replace(block.html)("comment",/<!--[\s\S]*?-->/)("closed",/<(tag)[\s\S]+?<\/\1>/)("closing",/<tag(?:"[^"]*"|'[^']*'|[^'">])*?>/)(/tag/g,block._tag)();block.paragraph=replace(block.paragraph)("hr",block.hr)("heading",block.heading)("lheading",block.lheading)("blockquote",block.blockquote)("tag","<"+block._tag)("def",block.def)();block.normal=merge({},block);block.gfm=merge({},block.normal,{fences:/^ *(`{3,}|~{3,}) *(\S+)? *\n([\s\S]+?)\s*\1 *(?:\n+|$)/,paragraph:/^/});block.gfm.paragraph=replace(block.paragraph)("(?!","(?!"+block.gfm.fences.source.replace("\\1","\\2")+"|"+block.list.source.replace("\\1","\\3")+"|")();block.tables=merge({},block.gfm,{nptable:/^ *(\S.*\|.*)\n *([-:]+ *\|[-| :]*)\n((?:.*\|.*(?:\n|$))*)\n*/,table:/^ *\|(.+)\n *\|( *[-:]+[-| :]*)\n((?: *\|.*(?:\n|$))*)\n*/});function Lexer(options){this.tokens=[];this.tokens.links={};this.options=options||marked.defaults;this.rules=block.normal;if(this.options.gfm){if(this.options.tables){this.rules=block.tables}else{this.rules=block.gfm}}}Lexer.rules=block;Lexer.lex=function(src,options){var lexer=new Lexer(options);return lexer.lex(src)};Lexer.prototype.lex=function(src){src=src.replace(/\r\n|\r/g,"\n").replace(/\t/g,"    ").replace(/\u00a0/g," ").replace(/\u2424/g,"\n");return this.token(src,true)};Lexer.prototype.token=function(src,top,bq){var src=src.replace(/^ +$/gm,""),next,loose,cap,bull,b,item,space,i,l;while(src){if(cap=this.rules.newline.exec(src)){src=src.substring(cap[0].length);if(cap[0].length>1){this.tokens.push({type:"space"})}}if(cap=this.rules.code.exec(src)){src=src.substring(cap[0].length);cap=cap[0].replace(/^ {4}/gm,"");this.tokens.push({type:"code",text:!this.options.pedantic?cap.replace(/\n+$/,""):cap});continue}if(cap=this.rules.fences.exec(src)){src=src.substring(cap[0].length);this.tokens.push({type:"code",lang:cap[2],text:cap[3]});continue}if(cap=this.rules.heading.exec(src)){src=src.substring(cap[0].length);this.tokens.push({type:"heading",depth:cap[1].length,text:cap[2]});continue}if(top&&(cap=this.rules.nptable.exec(src))){src=src.substring(cap[0].length);item={type:"table",header:cap[1].replace(/^ *| *\| *$/g,"").split(/ *\| */),align:cap[2].replace(/^ *|\| *$/g,"").split(/ *\| */),cells:cap[3].replace(/\n$/,"").split("\n")};for(i=0;i<item.align.length;i++){if(/^ *-+: *$/.test(item.align[i])){item.align[i]="right"}else if(/^ *:-+: *$/.test(item.align[i])){item.align[i]="center"}else if(/^ *:-+ *$/.test(item.align[i])){item.align[i]="left"}else{item.align[i]=null}}for(i=0;i<item.cells.length;i++){item.cells[i]=item.cells[i].split(/ *\| */)}this.tokens.push(item);continue}if(cap=this.rules.lheading.exec(src)){src=src.substring(cap[0].length);this.tokens.push({type:"heading",depth:cap[2]==="="?1:2,text:cap[1]});continue}if(cap=this.rules.hr.exec(src)){src=src.substring(cap[0].length);this.tokens.push({type:"hr"});continue}if(cap=this.rules.blockquote.exec(src)){src=src.substring(cap[0].length);this.tokens.push({type:"blockquote_start"});cap=cap[0].replace(/^ *> ?/gm,"");this.token(cap,top,true);this.tokens.push({type:"blockquote_end"});continue}if(cap=this.rules.list.exec(src)){src=src.substring(cap[0].length);bull=cap[2];this.tokens.push({type:"list_start",ordered:bull.length>1});cap=cap[0].match(this.rules.item);next=false;l=cap.length;i=0;for(;i<l;i++){item=cap[i];space=item.length;item=item.replace(/^ *([*+-]|\d+\.) +/,"");if(~item.indexOf("\n ")){space-=item.length;item=!this.options.pedantic?item.replace(new RegExp("^ {1,"+space+"}","gm"),""):item.replace(/^ {1,4}/gm,"")}if(this.options.smartLists&&i!==l-1){b=block.bullet.exec(cap[i+1])[0];if(bull!==b&&!(bull.length>1&&b.length>1)){src=cap.slice(i+1).join("\n")+src;i=l-1}}loose=next||/\n\n(?!\s*$)/.test(item);if(i!==l-1){next=item.charAt(item.length-1)==="\n";if(!loose)loose=next}this.tokens.push({type:loose?"loose_item_start":"list_item_start"});this.token(item,false,bq);this.tokens.push({type:"list_item_end"})}this.tokens.push({type:"list_end"});continue}if(cap=this.rules.html.exec(src)){src=src.substring(cap[0].length);this.tokens.push({type:this.options.sanitize?"paragraph":"html",pre:cap[1]==="pre"||cap[1]==="script"||cap[1]==="style",text:cap[0]});continue}if(!bq&&top&&(cap=this.rules.def.exec(src))){src=src.substring(cap[0].length);this.tokens.links[cap[1].toLowerCase()]={href:cap[2],title:cap[3]};continue}if(top&&(cap=this.rules.table.exec(src))){src=src.substring(cap[0].length);item={type:"table",header:cap[1].replace(/^ *| *\| *$/g,"").split(/ *\| */),align:cap[2].replace(/^ *|\| *$/g,"").split(/ *\| */),cells:cap[3].replace(/(?: *\| *)?\n$/,"").split("\n")};for(i=0;i<item.align.length;i++){if(/^ *-+: *$/.test(item.align[i])){item.align[i]="right"}else if(/^ *:-+: *$/.test(item.align[i])){item.align[i]="center"}else if(/^ *:-+ *$/.test(item.align[i])){item.align[i]="left"}else{item.align[i]=null}}for(i=0;i<item.cells.length;i++){item.cells[i]=item.cells[i].replace(/^ *\| *| *\| *$/g,"").split(/ *\| */)}this.tokens.push(item);continue}if(top&&(cap=this.rules.paragraph.exec(src))){src=src.substring(cap[0].length);this.tokens.push({type:"paragraph",text:cap[1].charAt(cap[1].length-1)==="\n"?cap[1].slice(0,-1):cap[1]});continue}if(cap=this.rules.text.exec(src)){src=src.substring(cap[0].length);this.tokens.push({type:"text",text:cap[0]});continue}if(src){throw new Error("Infinite loop on byte: "+src.charCodeAt(0))}}return this.tokens};var inline={escape:/^\\([\\`*{}\[\]()#+\-.!_>])/,autolink:/^<([^ >]+(@|:\/)[^ >]+)>/,url:noop,tag:/^<!--[\s\S]*?-->|^<\/?\w+(?:"[^"]*"|'[^']*'|[^'">])*?>/,link:/^!?\[(inside)\]\(href\)/,reflink:/^!?\[(inside)\]\s*\[([^\]]*)\]/,nolink:/^!?\[((?:\[[^\]]*\]|[^\[\]])*)\]/,strong:/^__([\s\S]+?)__(?!_)|^\*\*([\s\S]+?)\*\*(?!\*)/,em:/^\b_((?:__|[\s\S])+?)_\b|^\*((?:\*\*|[\s\S])+?)\*(?!\*)/,code:/^(`+)\s*([\s\S]*?[^`])\s*\1(?!`)/,br:/^ {2,}\n(?!\s*$)/,del:noop,text:/^[\s\S]+?(?=[\\<!\[_*`]| {2,}\n|$)/};inline._inside=/(?:\[[^\]]*\]|[^\[\]]|\](?=[^\[]*\]))*/;inline._href=/\s*<?([\s\S]*?)>?(?:\s+['"]([\s\S]*?)['"])?\s*/;inline.link=replace(inline.link)("inside",inline._inside)("href",inline._href)();inline.reflink=replace(inline.reflink)("inside",inline._inside)();inline.normal=merge({},inline);inline.pedantic=merge({},inline.normal,{strong:/^__(?=\S)([\s\S]*?\S)__(?!_)|^\*\*(?=\S)([\s\S]*?\S)\*\*(?!\*)/,em:/^_(?=\S)([\s\S]*?\S)_(?!_)|^\*(?=\S)([\s\S]*?\S)\*(?!\*)/});inline.gfm=merge({},inline.normal,{escape:replace(inline.escape)("])","~|])")(),url:/^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/,del:/^~~(?=\S)([\s\S]*?\S)~~/,text:replace(inline.text)("]|","~]|")("|","|https?://|")()});inline.breaks=merge({},inline.gfm,{br:replace(inline.br)("{2,}","*")(),text:replace(inline.gfm.text)("{2,}","*")()});function InlineLexer(links,options){this.options=options||marked.defaults;this.links=links;this.rules=inline.normal;this.renderer=this.options.renderer||new Renderer;this.renderer.options=this.options;if(!this.links){throw new Error("Tokens array requires a `links` property.")}if(this.options.gfm){if(this.options.breaks){this.rules=inline.breaks}else{this.rules=inline.gfm}}else if(this.options.pedantic){this.rules=inline.pedantic}}InlineLexer.rules=inline;InlineLexer.output=function(src,links,options){var inline=new InlineLexer(links,options);return inline.output(src)};InlineLexer.prototype.output=function(src){var out="",link,text,href,cap;while(src){if(cap=this.rules.escape.exec(src)){src=src.substring(cap[0].length);out+=cap[1];continue}if(cap=this.rules.autolink.exec(src)){src=src.substring(cap[0].length);if(cap[2]==="@"){text=cap[1].charAt(6)===":"?this.mangle(cap[1].substring(7)):this.mangle(cap[1]);href=this.mangle("mailto:")+text}else{text=escape(cap[1]);href=text}out+=this.renderer.link(href,null,text);continue}if(!this.inLink&&(cap=this.rules.url.exec(src))){src=src.substring(cap[0].length);text=escape(cap[1]);href=text;out+=this.renderer.link(href,null,text);continue}if(cap=this.rules.tag.exec(src)){if(!this.inLink&&/^<a /i.test(cap[0])){this.inLink=true}else if(this.inLink&&/^<\/a>/i.test(cap[0])){this.inLink=false}src=src.substring(cap[0].length);out+=this.options.sanitize?escape(cap[0]):cap[0];continue}if(cap=this.rules.link.exec(src)){src=src.substring(cap[0].length);this.inLink=true;out+=this.outputLink(cap,{href:cap[2],title:cap[3]});this.inLink=false;continue}if((cap=this.rules.reflink.exec(src))||(cap=this.rules.nolink.exec(src))){src=src.substring(cap[0].length);link=(cap[2]||cap[1]).replace(/\s+/g," ");link=this.links[link.toLowerCase()];if(!link||!link.href){out+=cap[0].charAt(0);src=cap[0].substring(1)+src;continue}this.inLink=true;out+=this.outputLink(cap,link);this.inLink=false;continue}if(cap=this.rules.strong.exec(src)){src=src.substring(cap[0].length);out+=this.renderer.strong(this.output(cap[2]||cap[1]));continue}if(cap=this.rules.em.exec(src)){src=src.substring(cap[0].length);out+=this.renderer.em(this.output(cap[2]||cap[1]));continue}if(cap=this.rules.code.exec(src)){src=src.substring(cap[0].length);out+=this.renderer.codespan(escape(cap[2],true));continue}if(cap=this.rules.br.exec(src)){src=src.substring(cap[0].length);out+=this.renderer.br();continue}if(cap=this.rules.del.exec(src)){src=src.substring(cap[0].length);out+=this.renderer.del(this.output(cap[1]));continue}if(cap=this.rules.text.exec(src)){src=src.substring(cap[0].length);out+=escape(this.smartypants(cap[0]));continue}if(src){throw new Error("Infinite loop on byte: "+src.charCodeAt(0))}}return out};InlineLexer.prototype.outputLink=function(cap,link){var href=escape(link.href),title=link.title?escape(link.title):null;return cap[0].charAt(0)!=="!"?this.renderer.link(href,title,this.output(cap[1])):this.renderer.image(href,title,escape(cap[1]))};InlineLexer.prototype.smartypants=function(text){if(!this.options.smartypants)return text;return text.replace(/--/g,"—").replace(/(^|[-\u2014/(\[{"\s])'/g,"$1‘").replace(/'/g,"’").replace(/(^|[-\u2014/(\[{\u2018\s])"/g,"$1“").replace(/"/g,"”").replace(/\.{3}/g,"…")};InlineLexer.prototype.mangle=function(text){var out="",l=text.length,i=0,ch;for(;i<l;i++){ch=text.charCodeAt(i);if(Math.random()>.5){ch="x"+ch.toString(16)}out+="&#"+ch+";"}return out};function Renderer(options){this.options=options||{}}Renderer.prototype.code=function(code,lang,escaped){if(this.options.highlight){var out=this.options.highlight(code,lang);if(out!=null&&out!==code){escaped=true;code=out}}if(!lang){return"<pre><code>"+(escaped?code:escape(code,true))+"\n</code></pre>"}return'<pre><code class="'+this.options.langPrefix+escape(lang,true)+'">'+(escaped?code:escape(code,true))+"\n</code></pre>\n"};Renderer.prototype.blockquote=function(quote){return"<blockquote>\n"+quote+"</blockquote>\n"};Renderer.prototype.html=function(html){return html};Renderer.prototype.heading=function(text,level,raw){return"<h"+level+' id="'+this.options.headerPrefix+raw.toLowerCase().replace(/[^\w]+/g,"-")+'">'+text+"</h"+level+">\n"};Renderer.prototype.hr=function(){return this.options.xhtml?"<hr/>\n":"<hr>\n"};Renderer.prototype.list=function(body,ordered){var type=ordered?"ol":"ul";return"<"+type+">\n"+body+"</"+type+">\n"};Renderer.prototype.listitem=function(text){return"<li>"+text+"</li>\n"};Renderer.prototype.paragraph=function(text){return"<p>"+text+"</p>\n"};Renderer.prototype.table=function(header,body){return"<table>\n"+"<thead>\n"+header+"</thead>\n"+"<tbody>\n"+body+"</tbody>\n"+"</table>\n"};Renderer.prototype.tablerow=function(content){return"<tr>\n"+content+"</tr>\n"};Renderer.prototype.tablecell=function(content,flags){var type=flags.header?"th":"td";var tag=flags.align?"<"+type+' style="text-align:'+flags.align+'">':"<"+type+">";return tag+content+"</"+type+">\n"};Renderer.prototype.strong=function(text){return"<strong>"+text+"</strong>"};Renderer.prototype.em=function(text){return"<em>"+text+"</em>"};Renderer.prototype.codespan=function(text){return"<code>"+text+"</code>"};Renderer.prototype.br=function(){return this.options.xhtml?"<br/>":"<br>"};Renderer.prototype.del=function(text){return"<del>"+text+"</del>"};Renderer.prototype.link=function(href,title,text){if(this.options.sanitize){try{var prot=decodeURIComponent(unescape(href)).replace(/[^\w:]/g,"").toLowerCase()}catch(e){return""}if(prot.indexOf("javascript:")===0){return""}}var out='<a href="'+href+'"';if(title){out+=' title="'+title+'"'}out+=">"+text+"</a>";return out};Renderer.prototype.image=function(href,title,text){var out='<img src="'+href+'" alt="'+text+'"';if(title){out+=' title="'+title+'"'}out+=this.options.xhtml?"/>":">";return out};function Parser(options){this.tokens=[];this.token=null;this.options=options||marked.defaults;this.options.renderer=this.options.renderer||new Renderer;this.renderer=this.options.renderer;this.renderer.options=this.options}Parser.parse=function(src,options,renderer){var parser=new Parser(options,renderer);return parser.parse(src)};Parser.prototype.parse=function(src){this.inline=new InlineLexer(src.links,this.options,this.renderer);this.tokens=src.reverse();var out="";while(this.next()){out+=this.tok()}return out};Parser.prototype.next=function(){return this.token=this.tokens.pop()};Parser.prototype.peek=function(){return this.tokens[this.tokens.length-1]||0};Parser.prototype.parseText=function(){var body=this.token.text;while(this.peek().type==="text"){body+="\n"+this.next().text}return this.inline.output(body)};Parser.prototype.tok=function(){switch(this.token.type){case"space":{return""}case"hr":{return this.renderer.hr()}case"heading":{return this.renderer.heading(this.inline.output(this.token.text),this.token.depth,this.token.text)}case"code":{return this.renderer.code(this.token.text,this.token.lang,this.token.escaped)}case"table":{var header="",body="",i,row,cell,flags,j;cell="";for(i=0;i<this.token.header.length;i++){flags={header:true,align:this.token.align[i]};cell+=this.renderer.tablecell(this.inline.output(this.token.header[i]),{header:true,align:this.token.align[i]})}header+=this.renderer.tablerow(cell);for(i=0;i<this.token.cells.length;i++){row=this.token.cells[i];cell="";for(j=0;j<row.length;j++){cell+=this.renderer.tablecell(this.inline.output(row[j]),{header:false,align:this.token.align[j]})}body+=this.renderer.tablerow(cell)}return this.renderer.table(header,body)}case"blockquote_start":{var body="";while(this.next().type!=="blockquote_end"){body+=this.tok()}return this.renderer.blockquote(body)}case"list_start":{var body="",ordered=this.token.ordered;while(this.next().type!=="list_end"){body+=this.tok()}return this.renderer.list(body,ordered)}case"list_item_start":{var body="";while(this.next().type!=="list_item_end"){body+=this.token.type==="text"?this.parseText():this.tok()}return this.renderer.listitem(body)}case"loose_item_start":{var body="";while(this.next().type!=="list_item_end"){body+=this.tok()}return this.renderer.listitem(body)}case"html":{var html=!this.token.pre&&!this.options.pedantic?this.inline.output(this.token.text):this.token.text;return this.renderer.html(html)}case"paragraph":{return this.renderer.paragraph(this.inline.output(this.token.text))}case"text":{return this.renderer.paragraph(this.parseText())}}};function escape(html,encode){return html.replace(!encode?/&(?!#?\w+;)/g:/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}function unescape(html){return html.replace(/&([#\w]+);/g,function(_,n){n=n.toLowerCase();if(n==="colon")return":";if(n.charAt(0)==="#"){return n.charAt(1)==="x"?String.fromCharCode(parseInt(n.substring(2),16)):String.fromCharCode(+n.substring(1))}return""})}function replace(regex,opt){regex=regex.source;opt=opt||"";return function self(name,val){if(!name)return new RegExp(regex,opt);val=val.source||val;val=val.replace(/(^|[^\[])\^/g,"$1");regex=regex.replace(name,val);return self}}function noop(){}noop.exec=noop;function merge(obj){var i=1,target,key;for(;i<arguments.length;i++){target=arguments[i];for(key in target){if(Object.prototype.hasOwnProperty.call(target,key)){obj[key]=target[key]}}}return obj}function marked(src,opt,callback){if(callback||typeof opt==="function"){if(!callback){callback=opt;opt=null}opt=merge({},marked.defaults,opt||{});var highlight=opt.highlight,tokens,pending,i=0;try{tokens=Lexer.lex(src,opt)}catch(e){return callback(e)}pending=tokens.length;var done=function(err){if(err){opt.highlight=highlight;return callback(err)}var out;try{out=Parser.parse(tokens,opt)}catch(e){err=e}opt.highlight=highlight;return err?callback(err):callback(null,out)};if(!highlight||highlight.length<3){return done()}delete opt.highlight;if(!pending)return done();for(;i<tokens.length;i++){(function(token){if(token.type!=="code"){return--pending||done()}return highlight(token.text,token.lang,function(err,code){if(err)return done(err);if(code==null||code===token.text){return--pending||done()}token.text=code;token.escaped=true;--pending||done()})})(tokens[i])}return}try{if(opt)opt=merge({},marked.defaults,opt);return Parser.parse(Lexer.lex(src,opt),opt)}catch(e){e.message+="\nPlease report this to https://github.com/chjj/marked.";if((opt||marked.defaults).silent){return"<p>An error occured:</p><pre>"+escape(e.message+"",true)+"</pre>"}throw e}}marked.options=marked.setOptions=function(opt){merge(marked.defaults,opt);return marked};marked.defaults={gfm:true,tables:true,breaks:false,pedantic:false,sanitize:false,smartLists:false,silent:false,highlight:null,langPrefix:"lang-",smartypants:false,headerPrefix:"",renderer:new Renderer,xhtml:false};marked.Parser=Parser;marked.parser=Parser.parse;marked.Renderer=Renderer;marked.Lexer=Lexer;marked.lexer=Lexer.lex;marked.InlineLexer=InlineLexer;marked.inlineLexer=InlineLexer.output;marked.parse=marked;if(typeof module!=="undefined"&&typeof exports==="object"){module.exports=marked}else if(typeof define==="function"&&define.amd){define(function(){return marked})}else{this.marked=marked}}).call(function(){return this||(typeof window!=="undefined"?window:global)}());
+
+	return module.exports;
+}();
+
+
+// FORMAT OPTIONS FOR MARKED IMPLEMENTATION
+
+function formatOptions(options)
+{
+	function toHighlight(code, lang)
+	{
+		if (!lang && options.defaultHighlighting.ctor === 'Just')
+		{
+			lang = options.defaultHighlighting._0;
+		}
+
+		if (typeof hljs !== 'undefined' && lang && hljs.listLanguages().indexOf(lang) >= 0)
+		{
+			return hljs.highlight(lang, code, true).value;
+		}
+
+		return code;
+	}
+
+	var gfm = options.githubFlavored;
+	if (gfm.ctor === 'Just')
+	{
+		return {
+			highlight: toHighlight,
+			gfm: true,
+			tables: gfm._0.tables,
+			breaks: gfm._0.breaks,
+			sanitize: options.sanitize,
+			smartypants: options.smartypants
+		};
+	}
+
+	return {
+		highlight: toHighlight,
+		gfm: false,
+		tables: false,
+		breaks: false,
+		sanitize: options.sanitize,
+		smartypants: options.smartypants
+	};
+}
+
+
+// EXPORTS
+
+return {
+	toHtml: F3(toHtml)
+};
+
+}();
+var _evancz$elm_markdown$Markdown$toHtmlWith = _evancz$elm_markdown$Native_Markdown.toHtml;
+var _evancz$elm_markdown$Markdown$defaultOptions = {
+	githubFlavored: _elm_lang$core$Maybe$Just(
+		{tables: false, breaks: false}),
+	defaultHighlighting: _elm_lang$core$Maybe$Nothing,
+	sanitize: false,
+	smartypants: false
+};
+var _evancz$elm_markdown$Markdown$toHtml = F2(
+	function (attrs, string) {
+		return A3(_evancz$elm_markdown$Native_Markdown.toHtml, _evancz$elm_markdown$Markdown$defaultOptions, attrs, string);
+	});
+var _evancz$elm_markdown$Markdown$Options = F4(
+	function (a, b, c, d) {
+		return {githubFlavored: a, defaultHighlighting: b, sanitize: c, smartypants: d};
+	});
+var _mwm126$ahu$AhuModel$roundn = F2(
+	function (n, x) {
+		var f = _elm_lang$core$Basics$toFloat(
+			Math.pow(10, n));
+		var hundred = f * x;
+		var fh = _elm_lang$core$Basics$toFloat(
+			_elm_lang$core$Basics$round(hundred));
+		return fh / f;
+	});
 var _mwm126$ahu$AhuModel$supply_rel_humidity = function (supply_t) {
 	return (_elm_lang$core$Native_Utils.cmp(supply_t, 60) < 0) ? 95 : (95 - ((supply_t - 60) * 3));
 };
+var _mwm126$ahu$AhuModel$comfort_rh_min = 30;
+var _mwm126$ahu$AhuModel$comfort_rh_max = 60;
+var _mwm126$ahu$AhuModel$comfort_temp_min = 70;
+var _mwm126$ahu$AhuModel$comfort_temp_max = 80;
 var _mwm126$ahu$AhuModel$room_comment = function (model) {
 	var room_t = model.room_t;
 	var room_rh = model.room_rh;
-	return (_elm_lang$core$Native_Utils.cmp(room_rh, 60) > 0) ? A2(
+	return (_elm_lang$core$Native_Utils.cmp(room_rh, _mwm126$ahu$AhuModel$comfort_rh_max) > 0) ? A2(
 		_elm_lang$core$Basics_ops['++'],
-		'Ugh!  It\'s too humid.',
-		_elm_lang$core$Basics$toString(room_rh)) : ((_elm_lang$core$Native_Utils.cmp(room_rh, 30) < 0) ? A2(
+		'Ugh!  It\'s too humid. ',
+		_elm_lang$core$Basics$toString(
+			A2(_mwm126$ahu$AhuModel$roundn, 2, room_rh))) : ((_elm_lang$core$Native_Utils.cmp(room_rh, _mwm126$ahu$AhuModel$comfort_rh_min) < 0) ? A2(
 		_elm_lang$core$Basics_ops['++'],
-		'It\'s too dry.',
-		_elm_lang$core$Basics$toString(room_rh)) : ((_elm_lang$core$Native_Utils.cmp(room_t, 80) > 0) ? A2(
+		'It\'s too dry. ',
+		_elm_lang$core$Basics$toString(room_rh)) : ((_elm_lang$core$Native_Utils.cmp(room_t, _mwm126$ahu$AhuModel$comfort_temp_max) > 0) ? A2(
 		_elm_lang$core$Basics_ops['++'],
-		'Whew!  It\'s too hot in here!',
-		_elm_lang$core$Basics$toString(room_t)) : ((_elm_lang$core$Native_Utils.cmp(room_t, 70) < 0) ? A2(
+		'Whew!  It\'s too hot in here! ',
+		_elm_lang$core$Basics$toString(
+			A2(_mwm126$ahu$AhuModel$roundn, 2, room_t))) : ((_elm_lang$core$Native_Utils.cmp(room_t, _mwm126$ahu$AhuModel$comfort_temp_min) < 0) ? A2(
 		_elm_lang$core$Basics_ops['++'],
-		'Brrr!  It\'s too cold in here!',
-		_elm_lang$core$Basics$toString(room_t)) : '')));
+		'Brrr!  It\'s too cold in here! ',
+		_elm_lang$core$Basics$toString(
+			A2(_mwm126$ahu$AhuModel$roundn, 2, room_t))) : '')));
 };
 var _mwm126$ahu$AhuModel$room_t = F5(
 	function (old_room_t, q, shf, cool_supply, cp) {
@@ -9166,9 +9323,12 @@ var _mwm126$ahu$AhuModel$room_t = F5(
 	});
 var _mwm126$ahu$AhuModel$btu_per_ton = 12000;
 var _mwm126$ahu$AhuModel$air_specific_heat = 0.241;
+var _mwm126$ahu$AhuModel$supply_rel_hum = 0.95;
+var _mwm126$ahu$AhuModel$mph = 60;
+var _mwm126$ahu$AhuModel$cfpp = 13.2;
 var _mwm126$ahu$AhuModel$cool_supply = function (model) {
 	var cp = _mwm126$ahu$AhuModel$air_specific_heat;
-	return (((model.cfm * 60) * cp) * (model.room_t - model.sa_t)) / (13.2 * _mwm126$ahu$AhuModel$btu_per_ton);
+	return (((model.cfm * 60) * cp) * (model.room_t - model.sa_t)) / (_mwm126$ahu$AhuModel$cfpp * _mwm126$ahu$AhuModel$btu_per_ton);
 };
 var _mwm126$ahu$AhuModel$new_room_t = function (model) {
 	var cp = _mwm126$ahu$AhuModel$air_specific_heat;
@@ -9180,8 +9340,11 @@ var _mwm126$ahu$AhuModel$enthalpy = F2(
 	});
 var _mwm126$ahu$AhuModel$total_heat_flow = F5(
 	function (sa_cfm, room_w, room_t, supply_w, supply_t) {
-		return ((sa_cfm * 60) * (A2(_mwm126$ahu$AhuModel$enthalpy, room_w, room_t) - A2(_mwm126$ahu$AhuModel$enthalpy, supply_w, supply_t))) / (13.2 * 12000);
+		var supply_h = A2(_mwm126$ahu$AhuModel$enthalpy, supply_w, supply_t);
+		var room_h = A2(_mwm126$ahu$AhuModel$enthalpy, room_w, room_t);
+		return ((sa_cfm * _mwm126$ahu$AhuModel$mph) * (room_h - supply_h)) / (_mwm126$ahu$AhuModel$cfpp * _mwm126$ahu$AhuModel$btu_per_ton);
 	});
+var _mwm126$ahu$AhuModel$a = A5(_mwm126$ahu$AhuModel$total_heat_flow, 1.0, 1.0, 1.0, 1.0, 1.0);
 var _mwm126$ahu$AhuModel$room_h = F2(
 	function (room_w, room_t) {
 		return A2(_mwm126$ahu$AhuModel$enthalpy, room_w, room_t);
@@ -9202,6 +9365,20 @@ var _mwm126$ahu$AhuModel$supply_w = F3(
 		return A3(_mwm126$ahu$AhuModel$abs_humidity, rh, t, p);
 	});
 var _mwm126$ahu$AhuModel$pressure = 14.696;
+var _mwm126$ahu$AhuModel$room_abs_hum = function (model) {
+	return A3(_mwm126$ahu$AhuModel$abs_humidity, model.room_rh, model.room_t, _mwm126$ahu$AhuModel$pressure);
+};
+var _mwm126$ahu$AhuModel$supply_abs_hum = function (model) {
+	return A3(_mwm126$ahu$AhuModel$abs_humidity, _mwm126$ahu$AhuModel$supply_rel_hum, model.sa_t, _mwm126$ahu$AhuModel$pressure);
+};
+var _mwm126$ahu$AhuModel$q_inflow = function (model) {
+	var supply_ah = _mwm126$ahu$AhuModel$supply_abs_hum(model);
+	var room_ah = _mwm126$ahu$AhuModel$room_abs_hum(model);
+	return A5(_mwm126$ahu$AhuModel$total_heat_flow, model.cfm, room_ah, model.room_t, supply_ah, model.sa_t);
+};
+var _mwm126$ahu$AhuModel$shf_inflow = function (model) {
+	return _mwm126$ahu$AhuModel$cool_supply(model) / _mwm126$ahu$AhuModel$q_inflow(model);
+};
 var _mwm126$ahu$AhuModel$new_room_rel_humidity = function (model) {
 	var supply_w = A3(
 		_mwm126$ahu$AhuModel$abs_humidity,
@@ -9209,11 +9386,12 @@ var _mwm126$ahu$AhuModel$new_room_rel_humidity = function (model) {
 		model.sa_t,
 		_mwm126$ahu$AhuModel$pressure);
 	var supply_t = model.sa_t;
+	var something = (1093 - (0.444 * supply_t)) / (13.2 * 12000);
 	var room_w = A3(_mwm126$ahu$AhuModel$abs_humidity, model.room_rh, model.room_t, _mwm126$ahu$AhuModel$pressure);
 	var sa_cfm = model.cfm;
 	var shf = model.shf;
 	var q = model.tons;
-	return model.room_rh + (((q * (1 - shf)) - (((((room_w - supply_w) * sa_cfm) * 60) * (1093 + (0.444 * supply_t))) / (13.2 * 12000))) / 100);
+	return model.room_rh + (((q * (1 - shf)) - ((((room_w - supply_w) * sa_cfm) * 60) * something)) / 100);
 };
 var _mwm126$ahu$AhuModel$outside_w = function (model) {
 	var pw_star = _mwm126$ahu$AhuModel$h2o_saturation_vapor_pressure(model.oa_wb);
@@ -9287,6 +9465,7 @@ var _mwm126$ahu$AhuModel$IncrementOap = F2(
 	function (a, b) {
 		return {ctor: 'IncrementOap', _0: a, _1: b};
 	});
+var _mwm126$ahu$AhuText$ahutext = '\nVolume 3 No.2, Spring 1999\nISSN# 1523-9926\n\n# Simulating the performance of an Air Handling Unit on a Psychrometric Chart\n\nBy\n\nDavid B. Meredith <dxm15@psu.edu>\nMark W Meredith <mwm126@gmail.com>\n\nSchool of Engineering Technology Department of Engineering Science\nand Commonwealth Engineering The Pennsylvania State University\nThe Pennsylvania State University\n\n# Abstract\n\nWhen teaching the principles of Heating, Ventilating and Air-conditioning, it is\nusually difficult to get students to visualize the interaction among all of the\ninter-dependent variables as they pass through an Air Handling Unit (AHU).\nSimilarly, it is difficult to explain how these processes would appear on a\npsychrometric chart. The Web-based software package (JAVA) was developed to\nassist faculty who teach in these disciplines, and to demonstrate to students\nthe various functions and relationships involved.\n\n\n# Introduction\n\nThere are three basic fields to this page. In the upper left corner is an\nanimated and interactive model of the airflow through the AHU. The right side of\nthe page shows an animated and interactive psychrometric chart including a\nsensible heat factor protractor. The bottom left corner contains an interactive\ncontrol panel for adjusting parameters in the simulation. Each of these sections\nwill be discussed in detail below.\n\n\n# The Air Handling Unit\n\nThe user can observe the representative air molecule as it passes through the\nunit . As the air molecule passes through this loop, its color changes to\nrepresent the air temperature on a color spectrum scale (red is relatively hot\nand blue is relatively cool). The flow rate and fraction of outside air can be\nadjusted by the user.\n\nA fraction of the conditioned return air is exhausted to the outside (EA) and\nreplaced with outside air (OA). This flow of fresh air into the building is\nrequired to maintain good indoor air quality (IAQ), but the quantity of outside\nair (as a percentage of the total airflow) can be adjusted by the user. The\nmixed air (MA) then passes through the cooling coil where both sensible energy\n(temperature) and latent energy (moisture) are removed from the air stream to\nbecome supply air (SA). The cooled and dehumidified air is then ducted into the\nbuilding to absorb energy and moisture from the thermal load.\n\n# The Psychrometric Chart\n\nThe right side of the page displays the animated and interactive psychrometric\nchart. The horizontal axis represents dry bulb temperature (sensible energy) and\nthe vertical axis represents absolute humidity ratio (latent energy). The\nsaturation line is also indicated on this chart. Superimposed on this chart is a\nrectangle representing the nominal comfort zone used in the HVAC&R industry. The\nboundaries of this zone range from 70 to 80F on the horizontal scale and from\n0.005 to 0.010 pounds of water vapor per pound of dry air on the vertical axis.\nAlso functioning in the psychrometric chart window is the Sensible Heat Factor\n(SHF) protractor with two animated vectors. One vector represents the cooling\nload required by the building and the other vector represents the cooling\nsupplied by the cooling system. Equilibrium exists when these two vectors are\nconcentric.\n\n\n# Control Panel and Limitations\n\nThe lower left window on the screen contains the control panel where the user\ncan modify various parameters. These are grouped into several related functions.\nThe first three parameters are usually controlled by the building mechanical\nmanager. The second group represent the outside air conditions, and the third\ngroup represent the building load parameters. The bottom line of the control\npanel allows the user to adjust the Simulation Speed. The speed can be varied\nfrom very slow (to watch the processes occur simultaneously in the AHU and on\nthe psychrometric chart) to fast (to observe how changes are reflected in the\nlocation of the room air within the comfort zone).\n\nChanging the Percent of Outside Air moves the location of the Mixed Air\ncondition on the psychrometric chart, and also affects the fraction of the air\nmolecule in the AHU that exits as exhaust air and returns as supply air. While\nchanging this parameter can have a major effect on the thermal load on the\ncooling coil and the overall cost of cooling a building, this program is not\ndesigned to address those issues. The Supply Air flow rate can be adjusted to\nmatch the load requirements. This action demonstrates the use of Variable Air\nVolume (VAV) systems commonly found in commercial projects today. The second\nmethod of modifying the cooling rate is to change the Supply Air Temperature\n(commonly referred to as reset). The interaction between these two parameters\nhas strong implications for the operating cost of the overall system, but that\nissue is beyond the scope of this project.\n\nThe Outside Air Temperature and the outside Wet Bulb Temperature represent the\nambient weather conditions. The primary effect in this simulation is to alter\nthe location of the OA point on the psychrometric chart. In a real sense, the\noutside temperature affects the building load. However to simplify the modeling\nof these processes, these two functions have not been coupled.\n\nThe building load is modeled as a Total Load (measured in Tons of refrigeration)\nand a Sensible Heat Fraction. These two parameters define the length and slope\nof the cooling load vector on the psychrometric chart\'s protractor. At\nequilibrium, the same slope is used on the psychrometric chart between the\nsupply air condition and the return air condition. When not at equilibrium, the\nslope between these points represents the cooling rate being supplied. The\ndifference between the cooling load and the cooling rate causes the room air\ncondition to migrate to a new equilibrium point.\n\nOne of the main strengths of this learning tool is to help students visualize\nhow room conditions are affected by changing building loads, and how the\nbuilding operator attempts to maintain design conditions within the space by\nadjusting air flow and temperature.\n\nIn the message line at the bottom of the simulation, the user is flashed brief\nmessages when parameters are out of range. For example, if the room temperature\nor humidity falls above or below reasonable preset limits, a message indicting\nthat the occupants are unhappy is shown. If the user tries to increase the air\nflow above the nominal maximum of 40,000 cfm, they are warned about the noise\ngenerated at high duct velocities. These messages are to remind the novice user\nthat the operation of a building mechanical system is even more complex than\nwhat is represented by this simulation.\n\n\n# Relationships and equations\n\nThe conditions for each state point of air are calculated from equations found\nin Chapter 6 of the 1997 ASHRAE Handbook of Fundamentals, Atlanta, GA. These\nequations relate the dry bulb temperature, wet bulb temperature, dew point\ntemperature, relative humidity, absolute humidity ratio and enthalpy.\n\nThe user defines the dry bulb temperature and wet bulb temperature of the\nOutside Air via the control panel. The user also defines the Supply Air\ntemperature via the control panel, and the relative humidity of the Supply air\nis assumed constant at 90%. The Mixed Air conditions are linearly interpolated\nfrom the user-defined percent of Outside Air and by the conditions of the return\nair and outside air. The return air conditions are allowed to float in response\nto the parameter values selected by the user.\n\nThe conditions at each point (Supply Air, Return Air, Outside Air and Mixed Air)\nare calculated at each time step. The animation of the points is linked to where\nthe air molecule is in the AHU model. The return air and outside air are simply\nproportional movements along the process line between them. The process between\nthe mixed air condition and the supply air (i.e., through the cooling coil) is\nmodeled to follow the profile of an ellipse in the second quadrant. This path\ndemonstrates that mostly sensible cooling occurs in the first half of the coil\nrows, followed by a combination of sensible cooling and dehumidification in the\nlast half of the coil rows. The process between the supply air condition and the\nreturn air (or room air) follows the process line defined by the sensible heat\nratio in the protractor.\n\nA simple energy and mass balance model is used to account for changes in the\ncondition of the room air. Constant sensible and latent capacitance values have\nbeen assumed to make it easy for the user to observe changes but for the system\nto return to equilibrium within a few minutes.\n\nThe cooling load of the building and cooling supply rates are determined using a\ntotal load and Sensible Heat Factor (SHF) concept. The total load (Btu/hr) is\nthe sum of the sensible load and the latent load. The SHF is the ratio of the\nsensible load to the total load. Typical office buildings are represented by an\nSHF = 0.9. The loads are measured in Tons of refrigeration, where one Ton equals\n12,000 Btu/hr. The flow rate of Supply air is measured in cubic feet per minute\n(cfm).\n\n\n\n# Conclusions\n\nA web-based tool to assist in the study of building system operation has been\nintroduced. The simulation allows the student to control various parameters, and\nto visualize the effect those parameter changes have on the operation of the\nsystem. It also allows the student to compare what is happening in the physical\nsystem represented by the building schematic with how the air conditions are\nchanging on the psychrometric chart. Finally, this software package allows the\nstudents to grasp the time-dependent nature of building mechanical systems. By\nacting as the building mechanical manager, they have the opportunity to try to\nmaintain acceptable comfort conditions in the safe (and inexpensive) environment\nof a simulation. Finally, it should be noted that this simulation is for\neducational purposes only, and should never be used as a design tool.\n\n';
 var _mwm126$ahu$Ahu$pie_points = F5(
 	function (cx, cy, r, t1, t2) {
 		var sides = 30;
@@ -9448,7 +9627,16 @@ var _mwm126$ahu$Ahu$control = F5(
 						ctor: '::',
 						_0: _elm_lang$html$Html_Events$onClick(
 							A2(inc, get, 0 - diff)),
-						_1: {ctor: '[]'}
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$style(
+								{
+									ctor: '::',
+									_0: {ctor: '_Tuple2', _0: 'float', _1: 'left'},
+									_1: {ctor: '[]'}
+								}),
+							_1: {ctor: '[]'}
+						}
 					},
 					{
 						ctor: '::',
@@ -9457,26 +9645,18 @@ var _mwm126$ahu$Ahu$control = F5(
 					}),
 				_1: {
 					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$div,
-						{
-							ctor: '::',
-							_0: _mwm126$ahu$Ahu$inlineStyle,
-							_1: {ctor: '[]'}
-						},
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html$text(
-								A2(
-									_elm_lang$core$Basics_ops['++'],
-									label,
+					_0: _elm_lang$html$Html$text(
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							label,
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								' ',
+								_elm_lang$core$Basics$toString(
 									A2(
-										_elm_lang$core$Basics_ops['++'],
-										' ',
-										_elm_lang$core$Basics$toString(
-											get(model))))),
-							_1: {ctor: '[]'}
-						}),
+										_mwm126$ahu$AhuModel$roundn,
+										2,
+										get(model)))))),
 					_1: {
 						ctor: '::',
 						_0: A2(
@@ -9485,7 +9665,16 @@ var _mwm126$ahu$Ahu$control = F5(
 								ctor: '::',
 								_0: _elm_lang$html$Html_Events$onClick(
 									A2(inc, get, diff)),
-								_1: {ctor: '[]'}
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$style(
+										{
+											ctor: '::',
+											_0: {ctor: '_Tuple2', _0: 'float', _1: 'right'},
+											_1: {ctor: '[]'}
+										}),
+									_1: {ctor: '[]'}
+								}
 							},
 							{
 								ctor: '::',
@@ -9497,7 +9686,6 @@ var _mwm126$ahu$Ahu$control = F5(
 				}
 			});
 	});
-var _mwm126$ahu$Ahu$bottom = 400;
 var _mwm126$ahu$Ahu$avg_int = F3(
 	function (r1, r2, t) {
 		return A2(
@@ -9574,10 +9762,11 @@ var _mwm126$ahu$Ahu$mixed_th = function (model) {
 };
 var _mwm126$ahu$Ahu$th_to_xy = function (_p5) {
 	var _p6 = _p5;
+	var bottom = 400;
 	return {
 		ctor: '_Tuple2',
-		_0: (((_p6._0 - 40) * (_elm_lang$core$Basics$toFloat(_mwm126$ahu$Ahu$bottom) - 100)) / (95 - 40)) + 100,
-		_1: (((2.9e-2 - _p6._1) * (_elm_lang$core$Basics$toFloat(_mwm126$ahu$Ahu$bottom) - 100)) / (2.9e-2 - 5.2e-3)) + 100
+		_0: (((_p6._0 - 40) * (_elm_lang$core$Basics$toFloat(bottom) - 100)) / (95 - 40)) + 100,
+		_1: (((2.9e-2 - _p6._1) * (_elm_lang$core$Basics$toFloat(bottom) - 100)) / (2.9e-2 - 5.2e-3)) + 100
 	};
 };
 var _mwm126$ahu$Ahu$air_state = F5(
@@ -9649,68 +9838,39 @@ var _mwm126$ahu$Ahu$air_state = F5(
 			}
 		};
 	});
-var _mwm126$ahu$Ahu$saturation_line = {
-	ctor: '::',
-	_0: {ctor: '_Tuple2', _0: 40.0, _1: 5.2e-3},
-	_1: {
-		ctor: '::',
-		_0: {ctor: '_Tuple2', _0: 45.0, _1: 6.3e-3},
-		_1: {
-			ctor: '::',
-			_0: {ctor: '_Tuple2', _0: 50.0, _1: 7.6e-3},
-			_1: {
+var _mwm126$ahu$Ahu$debug = F4(
+	function (model, shf_in, q_in, room_abs_hum) {
+		var r2 = function (x) {
+			return _elm_lang$core$Basics$toString(
+				A2(_mwm126$ahu$AhuModel$roundn, 2, x));
+		};
+		var show = F2(
+			function (name, value) {
+				return _elm_lang$html$Html$text(
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						name,
+						r2(value)));
+			});
+		return A2(
+			_elm_lang$html$Html$div,
+			{
 				ctor: '::',
-				_0: {ctor: '_Tuple2', _0: 55.0, _1: 9.2e-3},
-				_1: {
-					ctor: '::',
-					_0: {ctor: '_Tuple2', _0: 60.0, _1: 1.12e-2},
-					_1: {
-						ctor: '::',
-						_0: {ctor: '_Tuple2', _0: 65.0, _1: 1.32e-2},
-						_1: {
-							ctor: '::',
-							_0: {ctor: '_Tuple2', _0: 70.0, _1: 1.58e-2},
-							_1: {
-								ctor: '::',
-								_0: {ctor: '_Tuple2', _0: 75.0, _1: 1.88e-2},
-								_1: {
-									ctor: '::',
-									_0: {ctor: '_Tuple2', _0: 80.0, _1: 2.23e-2},
-									_1: {
-										ctor: '::',
-										_0: {ctor: '_Tuple2', _0: 85.0, _1: 2.64e-2},
-										_1: {
-											ctor: '::',
-											_0: {ctor: '_Tuple2', _0: 90.0, _1: 2.9e-2},
-											_1: {
-												ctor: '::',
-												_0: {ctor: '_Tuple2', _0: 95.0, _1: 2.9e-2},
-												_1: {ctor: '[]'}
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-};
+				_0: _mwm126$ahu$Ahu$grayStyle,
+				_1: {ctor: '[]'}
+			},
+			{
+				ctor: '::',
+				_0: A2(show, 'room_t', model.room_t),
+				_1: {ctor: '[]'}
+			});
+	});
 var _mwm126$ahu$Ahu$protractor = F3(
 	function (t, u, model) {
 		var y_1 = u;
 		var x_1 = t;
-		var room_abs_hum = A3(_mwm126$ahu$AhuModel$abs_humidity, model.room_rh, model.room_t, _mwm126$ahu$AhuModel$pressure);
-		var q_in = A5(
-			_mwm126$ahu$AhuModel$total_heat_flow,
-			model.cfm,
-			room_abs_hum,
-			model.room_t,
-			A3(_mwm126$ahu$AhuModel$abs_humidity, model.room_rh, model.sa_t, _mwm126$ahu$AhuModel$pressure),
-			model.sa_t);
-		var shf_in = _mwm126$ahu$AhuModel$cool_supply(model) / q_in;
+		var shf_in = _mwm126$ahu$AhuModel$shf_inflow(model);
+		var q_in = _mwm126$ahu$AhuModel$q_inflow(model);
 		var x_3 = t - (q_in * _elm_lang$core$Basics$sin((shf_in * _elm_lang$core$Basics$pi) / 2));
 		var y_3 = u + (q_in * _elm_lang$core$Basics$cos((shf_in * _elm_lang$core$Basics$pi) / 2));
 		var shf = model.shf;
@@ -9755,29 +9915,7 @@ var _mwm126$ahu$Ahu$protractor = F3(
 					},
 					{
 						ctor: '::',
-						_0: _elm_lang$html$Html$text(
-							A2(
-								_elm_lang$core$Basics_ops['++'],
-								'room_t = ',
-								A2(
-									_elm_lang$core$Basics_ops['++'],
-									_elm_lang$core$Basics$toString(model.room_t),
-									A2(
-										_elm_lang$core$Basics_ops['++'],
-										' shf_in=',
-										A2(
-											_elm_lang$core$Basics_ops['++'],
-											_elm_lang$core$Basics$toString(shf_in),
-											A2(
-												_elm_lang$core$Basics_ops['++'],
-												' q_in=',
-												A2(
-													_elm_lang$core$Basics_ops['++'],
-													_elm_lang$core$Basics$toString(q_in),
-													A2(
-														_elm_lang$core$Basics_ops['++'],
-														' room_abs_hum =',
-														_elm_lang$core$Basics$toString(room_abs_hum))))))))),
+						_0: A4(_mwm126$ahu$Ahu$debug, model, shf_in, q_in, _mwm126$ahu$AhuModel$room_abs_hum),
 						_1: {ctor: '[]'}
 					}),
 				_1: {
@@ -10129,69 +10267,148 @@ var _mwm126$ahu$Ahu$sprite_states = function (model) {
 	}
 };
 var _mwm126$ahu$Ahu$psych_chart = function (model) {
-	var p_vert = function (_p9) {
-		var _p10 = _p9;
-		var _p11 = _p10._0;
-		return A2(
-			_elm_lang$svg$Svg$line,
-			{
-				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$x1(
-					_elm_lang$core$Basics$toString(_p11)),
-				_1: {
+	var c4 = _mwm126$ahu$Ahu$th_to_xy(
+		{
+			ctor: '_Tuple2',
+			_0: _mwm126$ahu$AhuModel$comfort_temp_max,
+			_1: A3(_mwm126$ahu$AhuModel$abs_humidity, _mwm126$ahu$AhuModel$comfort_rh_min, _mwm126$ahu$AhuModel$comfort_temp_max, _mwm126$ahu$AhuModel$pressure)
+		});
+	var c3 = _mwm126$ahu$Ahu$th_to_xy(
+		{
+			ctor: '_Tuple2',
+			_0: _mwm126$ahu$AhuModel$comfort_temp_max,
+			_1: A3(_mwm126$ahu$AhuModel$abs_humidity, _mwm126$ahu$AhuModel$comfort_rh_max, _mwm126$ahu$AhuModel$comfort_temp_max, _mwm126$ahu$AhuModel$pressure)
+		});
+	var c2 = _mwm126$ahu$Ahu$th_to_xy(
+		{
+			ctor: '_Tuple2',
+			_0: _mwm126$ahu$AhuModel$comfort_temp_min,
+			_1: A3(_mwm126$ahu$AhuModel$abs_humidity, _mwm126$ahu$AhuModel$comfort_rh_max, _mwm126$ahu$AhuModel$comfort_temp_min, _mwm126$ahu$AhuModel$pressure)
+		});
+	var c1 = _mwm126$ahu$Ahu$th_to_xy(
+		{
+			ctor: '_Tuple2',
+			_0: _mwm126$ahu$AhuModel$comfort_temp_min,
+			_1: A3(_mwm126$ahu$AhuModel$abs_humidity, _mwm126$ahu$AhuModel$comfort_rh_min, _mwm126$ahu$AhuModel$comfort_temp_min, _mwm126$ahu$AhuModel$pressure)
+		});
+	var some_temperature = 50;
+	var r = 'blue';
+	var make_line = F3(
+		function (c, _p10, _p9) {
+			var _p11 = _p10;
+			var _p12 = _p9;
+			return A2(
+				_elm_lang$svg$Svg$line,
+				{
 					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$y1(
-						_elm_lang$core$Basics$toString(_p10._1)),
+					_0: _elm_lang$svg$Svg_Attributes$x1(
+						_elm_lang$core$Basics$toString(_p11._0)),
 					_1: {
 						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$x2(
-							_elm_lang$core$Basics$toString(_p11)),
+						_0: _elm_lang$svg$Svg_Attributes$y1(
+							_elm_lang$core$Basics$toString(_p11._1)),
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$y2(
-								_elm_lang$core$Basics$toString(1000)),
+							_0: _elm_lang$svg$Svg_Attributes$x2(
+								_elm_lang$core$Basics$toString(_p12._0)),
 							_1: {
 								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$stroke('black'),
-								_1: {ctor: '[]'}
+								_0: _elm_lang$svg$Svg_Attributes$y2(
+									_elm_lang$core$Basics$toString(_p12._1)),
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$svg$Svg_Attributes$stroke(c),
+									_1: {ctor: '[]'}
+								}
 							}
 						}
 					}
-				}
-			},
-			{ctor: '[]'});
+				},
+				{ctor: '[]'});
+		});
+	var p_horiz = function (_p13) {
+		var _p14 = _p13;
+		var _p15 = _p14._1;
+		return A3(
+			make_line,
+			'black',
+			{ctor: '_Tuple2', _0: _p14._0, _1: _p15},
+			{ctor: '_Tuple2', _0: 1000, _1: _p15});
 	};
-	var p_horiz = function (_p12) {
-		var _p13 = _p12;
-		var _p14 = _p13._1;
-		return A2(
-			_elm_lang$svg$Svg$line,
-			{
+	var p_vert = function (_p16) {
+		var _p17 = _p16;
+		var _p18 = _p17._0;
+		return A3(
+			make_line,
+			'black',
+			{ctor: '_Tuple2', _0: _p18, _1: _p17._1},
+			{ctor: '_Tuple2', _0: _p18, _1: 1000});
+	};
+	var comfort_zone = {
+		ctor: '::',
+		_0: A3(make_line, r, c1, c2),
+		_1: {
+			ctor: '::',
+			_0: A3(make_line, r, c2, c3),
+			_1: {
 				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$x1(
-					_elm_lang$core$Basics$toString(_p13._0)),
+				_0: A3(make_line, r, c3, c4),
 				_1: {
 					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$y1(
-						_elm_lang$core$Basics$toString(_p14)),
+					_0: A3(make_line, r, c4, c1),
+					_1: {ctor: '[]'}
+				}
+			}
+		}
+	};
+	var saturation_line = {
+		ctor: '::',
+		_0: {ctor: '_Tuple2', _0: 40.0, _1: 5.2e-3},
+		_1: {
+			ctor: '::',
+			_0: {ctor: '_Tuple2', _0: 45.0, _1: 6.3e-3},
+			_1: {
+				ctor: '::',
+				_0: {ctor: '_Tuple2', _0: 50.0, _1: 7.6e-3},
+				_1: {
+					ctor: '::',
+					_0: {ctor: '_Tuple2', _0: 55.0, _1: 9.2e-3},
 					_1: {
 						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$x2(
-							_elm_lang$core$Basics$toString(1000)),
+						_0: {ctor: '_Tuple2', _0: 60.0, _1: 1.12e-2},
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$y2(
-								_elm_lang$core$Basics$toString(_p14)),
+							_0: {ctor: '_Tuple2', _0: 65.0, _1: 1.32e-2},
 							_1: {
 								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$stroke('black'),
-								_1: {ctor: '[]'}
+								_0: {ctor: '_Tuple2', _0: 70.0, _1: 1.58e-2},
+								_1: {
+									ctor: '::',
+									_0: {ctor: '_Tuple2', _0: 75.0, _1: 1.88e-2},
+									_1: {
+										ctor: '::',
+										_0: {ctor: '_Tuple2', _0: 80.0, _1: 2.23e-2},
+										_1: {
+											ctor: '::',
+											_0: {ctor: '_Tuple2', _0: 85.0, _1: 2.64e-2},
+											_1: {
+												ctor: '::',
+												_0: {ctor: '_Tuple2', _0: 90.0, _1: 2.9e-2},
+												_1: {
+													ctor: '::',
+													_0: {ctor: '_Tuple2', _0: 95.0, _1: 2.9e-2},
+													_1: {ctor: '[]'}
+												}
+											}
+										}
+									}
+								}
 							}
 						}
 					}
 				}
-			},
-			{ctor: '[]'});
+			}
+		}
 	};
 	return _elm_lang$core$List$concat(
 		{
@@ -10199,13 +10416,13 @@ var _mwm126$ahu$Ahu$psych_chart = function (model) {
 			_0: A2(
 				_elm_lang$core$List$map,
 				p_horiz,
-				A2(_elm_lang$core$List$map, _mwm126$ahu$Ahu$th_to_xy, _mwm126$ahu$Ahu$saturation_line)),
+				A2(_elm_lang$core$List$map, _mwm126$ahu$Ahu$th_to_xy, saturation_line)),
 			_1: {
 				ctor: '::',
 				_0: A2(
 					_elm_lang$core$List$map,
 					p_vert,
-					A2(_elm_lang$core$List$map, _mwm126$ahu$Ahu$th_to_xy, _mwm126$ahu$Ahu$saturation_line)),
+					A2(_elm_lang$core$List$map, _mwm126$ahu$Ahu$th_to_xy, saturation_line)),
 				_1: {
 					ctor: '::',
 					_0: _elm_lang$core$List$concat(
@@ -10276,24 +10493,28 @@ var _mwm126$ahu$Ahu$psych_chart = function (model) {
 								}
 							}
 						}),
-					_1: {ctor: '[]'}
+					_1: {
+						ctor: '::',
+						_0: comfort_zone,
+						_1: {ctor: '[]'}
+					}
 				}
 			}
 		});
 };
 var _mwm126$ahu$Ahu$house = function (model) {
-	var _p15 = function (_) {
+	var _p19 = function (_) {
 		return _.recirc_air_location;
 	}(
 		_mwm126$ahu$Ahu$sprite_states(model));
-	var rx = _p15._0;
-	var ry = _p15._1;
-	var _p16 = function (_) {
+	var rx = _p19._0;
+	var ry = _p19._1;
+	var _p20 = function (_) {
 		return _.air_location;
 	}(
 		_mwm126$ahu$Ahu$sprite_states(model));
-	var ax = _p16._0;
-	var ay = _p16._1;
+	var ax = _p20._0;
+	var ay = _p20._1;
 	var ww = _mwm126$ahu$Ahu$duct_width;
 	var coil_x = _mwm126$ahu$Ahu$xx + (ww * 0.6);
 	var hh = _mwm126$ahu$Ahu$duct_height;
@@ -10627,204 +10848,425 @@ var _mwm126$ahu$Ahu$house = function (model) {
 		}
 	};
 };
+var _mwm126$ahu$Ahu$show_style = _elm_lang$html$Html_Attributes$style(
+	{
+		ctor: '::',
+		_0: {ctor: '_Tuple2', _0: 'float', _1: 'right'},
+		_1: {
+			ctor: '::',
+			_0: {ctor: '_Tuple2', _0: 'width', _1: '50%'},
+			_1: {
+				ctor: '::',
+				_0: {ctor: '_Tuple2', _0: 'display', _1: 'inline-block'},
+				_1: {ctor: '[]'}
+			}
+		}
+	});
+var _mwm126$ahu$Ahu$ctrl_style = _elm_lang$html$Html_Attributes$style(
+	{
+		ctor: '::',
+		_0: {ctor: '_Tuple2', _0: 'float', _1: 'left'},
+		_1: {
+			ctor: '::',
+			_0: {ctor: '_Tuple2', _0: 'width', _1: '50%'},
+			_1: {
+				ctor: '::',
+				_0: {ctor: '_Tuple2', _0: 'display', _1: 'inline-block'},
+				_1: {ctor: '[]'}
+			}
+		}
+	});
 var _mwm126$ahu$Ahu$view = function (model) {
+	var shf_in = _mwm126$ahu$AhuModel$shf_inflow(model);
+	var q_in = _mwm126$ahu$AhuModel$q_inflow(model);
+	var r2 = function (x) {
+		return _elm_lang$core$Basics$toString(
+			A2(_mwm126$ahu$AhuModel$roundn, 2, x));
+	};
+	var show = F2(
+		function (name, value) {
+			return _elm_lang$html$Html$text(
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					name,
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						' = ',
+						r2(value))));
+		});
 	var pro_y = 30;
 	var pro_x = 250.0;
 	return A2(
-		_elm_lang$html$Html$div,
+		_elm_lang$html$Html$article,
 		{ctor: '[]'},
 		{
 			ctor: '::',
-			_0: _elm_lang$html$Html$text('Adjust system'),
-			_1: {
-				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$div,
-					{
-						ctor: '::',
-						_0: _mwm126$ahu$Ahu$blueStyle,
-						_1: {ctor: '[]'}
-					},
-					{
-						ctor: '::',
-						_0: A5(
-							_mwm126$ahu$Ahu$control,
-							_mwm126$ahu$AhuModel$IncrementOap,
-							function (_) {
-								return _.oa_p;
-							},
-							5,
-							'Outside Air %',
-							model),
-						_1: {
+			_0: A2(
+				_elm_lang$html$Html$section,
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html_Attributes$style(
+						{
 							ctor: '::',
-							_0: A5(
-								_mwm126$ahu$Ahu$control,
-								_mwm126$ahu$AhuModel$IncrementSat,
-								function (_) {
-									return _.sa_t;
-								},
-								1,
-								'Supply Air Temp',
-								model),
+							_0: {ctor: '_Tuple2', _0: 'float', _1: 'left'},
 							_1: {
 								ctor: '::',
-								_0: A5(
-									_mwm126$ahu$Ahu$control,
-									_mwm126$ahu$AhuModel$IncrementCfm,
-									function (_) {
-										return _.cfm;
-									},
-									1000,
-									'CFM',
-									model),
-								_1: {ctor: '[]'}
-							}
-						}
-					}),
-				_1: {
-					ctor: '::',
-					_0: _elm_lang$html$Html$text('Adjust weather'),
-					_1: {
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$div,
-							{
-								ctor: '::',
-								_0: _mwm126$ahu$Ahu$redStyle,
-								_1: {ctor: '[]'}
-							},
-							{
-								ctor: '::',
-								_0: A5(
-									_mwm126$ahu$Ahu$control,
-									_mwm126$ahu$AhuModel$IncrementOat,
-									function (_) {
-										return _.oa_t;
-									},
-									1,
-									'Outside Air Temp',
-									model),
+								_0: {ctor: '_Tuple2', _0: 'width', _1: '50%'},
 								_1: {
 									ctor: '::',
-									_0: A5(
-										_mwm126$ahu$Ahu$control,
-										_mwm126$ahu$AhuModel$IncrementOawb,
-										function (_) {
-											return _.oa_wb;
-										},
-										3,
-										'Outside Air Wet Bulb',
-										model),
-									_1: {ctor: '[]'}
+									_0: {ctor: '_Tuple2', _0: 'position', _1: 'fixed'},
+									_1: {
+										ctor: '::',
+										_0: {ctor: '_Tuple2', _0: 'padding', _1: '1%'},
+										_1: {ctor: '[]'}
+									}
 								}
-							}),
-						_1: {
+							}
+						}),
+					_1: {ctor: '[]'}
+				},
+				{
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$div,
+						{
 							ctor: '::',
-							_0: _elm_lang$html$Html$text('Adjust load'),
+							_0: _mwm126$ahu$Ahu$ctrl_style,
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text('Setup the system by specifying weather...'),
 							_1: {
 								ctor: '::',
 								_0: A2(
 									_elm_lang$html$Html$div,
 									{
 										ctor: '::',
-										_0: _mwm126$ahu$Ahu$grayStyle,
+										_0: _mwm126$ahu$Ahu$redStyle,
 										_1: {ctor: '[]'}
 									},
 									{
 										ctor: '::',
 										_0: A5(
 											_mwm126$ahu$Ahu$control,
-											_mwm126$ahu$AhuModel$IncrementTons,
+											_mwm126$ahu$AhuModel$IncrementOat,
 											function (_) {
-												return _.tons;
+												return _.oa_t;
 											},
-											5,
-											'Tons',
+											1,
+											'Outside Air Temp',
 											model),
 										_1: {
 											ctor: '::',
 											_0: A5(
 												_mwm126$ahu$Ahu$control,
-												_mwm126$ahu$AhuModel$IncrementShf,
+												_mwm126$ahu$AhuModel$IncrementOawb,
 												function (_) {
-													return _.shf;
+													return _.oa_wb;
 												},
-												5.0e-2,
-												'SHF',
+												3,
+												'Outside Air Wet Bulb',
 												model),
-											_1: {
-												ctor: '::',
-												_0: A5(
-													_mwm126$ahu$Ahu$control,
-													_mwm126$ahu$AhuModel$IncrementCycle,
-													function (_) {
-														return _.cycle;
-													},
-													1,
-													'sim cycle (seconds)',
-													model),
-												_1: {
-													ctor: '::',
-													_0: A5(
-														_mwm126$ahu$Ahu$control,
-														_mwm126$ahu$AhuModel$IncrementShf,
-														function (_) {
-															return _.time;
-														},
-														5.0e-2,
-														'Time',
-														model),
-													_1: {ctor: '[]'}
-												}
-											}
+											_1: {ctor: '[]'}
 										}
 									}),
 								_1: {
 									ctor: '::',
-									_0: _elm_lang$html$Html$text(
-										_mwm126$ahu$AhuModel$room_comment(model)),
+									_0: A2(
+										_elm_lang$html$Html$p,
+										{ctor: '[]'},
+										{ctor: '[]'}),
 									_1: {
 										ctor: '::',
-										_0: A2(
-											_elm_lang$html$Html$p,
-											{ctor: '[]'},
-											{ctor: '[]'}),
+										_0: _elm_lang$html$Html$text('Setup the system by specifying load...'),
 										_1: {
 											ctor: '::',
 											_0: A2(
-												_elm_lang$svg$Svg$svg,
+												_elm_lang$html$Html$div,
 												{
 													ctor: '::',
-													_0: _elm_lang$svg$Svg_Attributes$viewBox('0 0 600 400'),
+													_0: _mwm126$ahu$Ahu$grayStyle,
+													_1: {ctor: '[]'}
+												},
+												{
+													ctor: '::',
+													_0: A5(
+														_mwm126$ahu$Ahu$control,
+														_mwm126$ahu$AhuModel$IncrementTons,
+														function (_) {
+															return _.tons;
+														},
+														5,
+														'Tons',
+														model),
 													_1: {
 														ctor: '::',
-														_0: _elm_lang$svg$Svg_Attributes$width('600px'),
-														_1: {ctor: '[]'}
-													}
-												},
-												_elm_lang$core$List$concat(
-													{
-														ctor: '::',
-														_0: A3(_mwm126$ahu$Ahu$protractor, pro_x, pro_y, model),
+														_0: A5(
+															_mwm126$ahu$Ahu$control,
+															_mwm126$ahu$AhuModel$IncrementShf,
+															function (_) {
+																return _.shf;
+															},
+															5.0e-2,
+															'SHF',
+															model),
 														_1: {
 															ctor: '::',
-															_0: _mwm126$ahu$Ahu$house(model),
+															_0: A5(
+																_mwm126$ahu$Ahu$control,
+																_mwm126$ahu$AhuModel$IncrementCycle,
+																function (_) {
+																	return _.cycle;
+																},
+																1,
+																'sim cycle (seconds)',
+																model),
 															_1: {
 																ctor: '::',
-																_0: _mwm126$ahu$Ahu$psych_chart(model),
+																_0: A5(
+																	_mwm126$ahu$Ahu$control,
+																	_mwm126$ahu$AhuModel$IncrementShf,
+																	function (_) {
+																		return _.time;
+																	},
+																	5.0e-2,
+																	'Time',
+																	model),
 																_1: {ctor: '[]'}
 															}
 														}
-													})),
-											_1: {ctor: '[]'}
+													}
+												}),
+											_1: {
+												ctor: '::',
+												_0: A2(
+													_elm_lang$html$Html$p,
+													{ctor: '[]'},
+													{ctor: '[]'}),
+												_1: {
+													ctor: '::',
+													_0: _elm_lang$html$Html$text('Now adjust the system to maintain comfort.'),
+													_1: {
+														ctor: '::',
+														_0: A2(
+															_elm_lang$html$Html$div,
+															{
+																ctor: '::',
+																_0: _mwm126$ahu$Ahu$blueStyle,
+																_1: {ctor: '[]'}
+															},
+															{
+																ctor: '::',
+																_0: A5(
+																	_mwm126$ahu$Ahu$control,
+																	_mwm126$ahu$AhuModel$IncrementOap,
+																	function (_) {
+																		return _.oa_p;
+																	},
+																	5,
+																	'Outside Air %',
+																	model),
+																_1: {
+																	ctor: '::',
+																	_0: A5(
+																		_mwm126$ahu$Ahu$control,
+																		_mwm126$ahu$AhuModel$IncrementSat,
+																		function (_) {
+																			return _.sa_t;
+																		},
+																		1,
+																		'Supply Air Temp',
+																		model),
+																	_1: {
+																		ctor: '::',
+																		_0: A5(
+																			_mwm126$ahu$Ahu$control,
+																			_mwm126$ahu$AhuModel$IncrementCfm,
+																			function (_) {
+																				return _.cfm;
+																			},
+																			1000,
+																			'CFM',
+																			model),
+																		_1: {ctor: '[]'}
+																	}
+																}
+															}),
+														_1: {ctor: '[]'}
+													}
+												}
+											}
 										}
 									}
 								}
 							}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$div,
+							{
+								ctor: '::',
+								_0: _mwm126$ahu$Ahu$show_style,
+								_1: {ctor: '[]'}
+							},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text('The results are:'),
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$p,
+										{ctor: '[]'},
+										{ctor: '[]'}),
+									_1: {
+										ctor: '::',
+										_0: _elm_lang$html$Html$text(
+											_mwm126$ahu$AhuModel$room_comment(model)),
+										_1: {
+											ctor: '::',
+											_0: A2(
+												_elm_lang$html$Html$p,
+												{ctor: '[]'},
+												{ctor: '[]'}),
+											_1: {
+												ctor: '::',
+												_0: A2(show, 'temperature inside the building', model.room_t),
+												_1: {
+													ctor: '::',
+													_0: A2(
+														_elm_lang$html$Html$p,
+														{ctor: '[]'},
+														{ctor: '[]'}),
+													_1: {
+														ctor: '::',
+														_0: A2(show, 'sensible heat factor of the building:', shf_in),
+														_1: {
+															ctor: '::',
+															_0: A2(
+																_elm_lang$html$Html$p,
+																{ctor: '[]'},
+																{ctor: '[]'}),
+															_1: {
+																ctor: '::',
+																_0: A2(show, 'Heat entering the building:', q_in),
+																_1: {
+																	ctor: '::',
+																	_0: A2(
+																		_elm_lang$html$Html$p,
+																		{ctor: '[]'},
+																		{ctor: '[]'}),
+																	_1: {
+																		ctor: '::',
+																		_0: A2(
+																			show,
+																			'room_abs_hum',
+																			_mwm126$ahu$AhuModel$room_abs_hum(model)),
+																		_1: {
+																			ctor: '::',
+																			_0: A2(
+																				_elm_lang$html$Html$p,
+																				{ctor: '[]'},
+																				{ctor: '[]'}),
+																			_1: {ctor: '[]'}
+																		}
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$div,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$style(
+										{
+											ctor: '::',
+											_0: {ctor: '_Tuple2', _0: 'margin-left', _1: '100px'},
+											_1: {ctor: '[]'}
+										}),
+									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: A2(
+										_elm_lang$svg$Svg$svg,
+										{
+											ctor: '::',
+											_0: _elm_lang$svg$Svg_Attributes$viewBox('0 0 600 400'),
+											_1: {
+												ctor: '::',
+												_0: _elm_lang$svg$Svg_Attributes$width('100%'),
+												_1: {ctor: '[]'}
+											}
+										},
+										_elm_lang$core$List$concat(
+											{
+												ctor: '::',
+												_0: A3(_mwm126$ahu$Ahu$protractor, pro_x, pro_y, model),
+												_1: {
+													ctor: '::',
+													_0: _mwm126$ahu$Ahu$house(model),
+													_1: {
+														ctor: '::',
+														_0: _mwm126$ahu$Ahu$psych_chart(model),
+														_1: {ctor: '[]'}
+													}
+												}
+											})),
+									_1: {ctor: '[]'}
+								}),
+							_1: {ctor: '[]'}
 						}
 					}
-				}
+				}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$section,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$style(
+							{
+								ctor: '::',
+								_0: {ctor: '_Tuple2', _0: 'float', _1: 'right'},
+								_1: {
+									ctor: '::',
+									_0: {ctor: '_Tuple2', _0: 'width', _1: '50%'},
+									_1: {
+										ctor: '::',
+										_0: {ctor: '_Tuple2', _0: 'overflow-y', _1: 'scroll'},
+										_1: {ctor: '[]'}
+									}
+								}
+							}),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$article,
+							{ctor: '[]'},
+							{
+								ctor: '::',
+								_0: A2(
+									_evancz$elm_markdown$Markdown$toHtml,
+									{ctor: '[]'},
+									_mwm126$ahu$AhuText$ahutext),
+								_1: {ctor: '[]'}
+							}),
+						_1: {ctor: '[]'}
+					}),
+				_1: {ctor: '[]'}
 			}
 		});
 };
@@ -10833,7 +11275,7 @@ var _mwm126$ahu$Ahu$subscriptions = function (model) {
 };
 var _mwm126$ahu$Ahu$time_mod = F2(
 	function (time, model) {
-		var ct = _elm_lang$core$Basics$toFloat(model.cycle);
+		var ct = model.cycle;
 		var t = _elm_lang$core$Time$inSeconds(time);
 		return (t - (ct * _elm_lang$core$Basics$toFloat(
 			_elm_lang$core$Basics$floor(t / ct)))) / ct;
@@ -10841,8 +11283,8 @@ var _mwm126$ahu$Ahu$time_mod = F2(
 var _mwm126$ahu$Ahu$update = F2(
 	function (msg, model) {
 		var new_model = function () {
-			var _p17 = msg;
-			switch (_p17.ctor) {
+			var _p21 = msg;
+			switch (_p21.ctor) {
 				case 'IncrementOap':
 					return _elm_lang$core$Native_Utils.update(
 						model,
@@ -10853,7 +11295,7 @@ var _mwm126$ahu$Ahu$update = F2(
 								A2(
 									_elm_lang$core$Basics$min,
 									100.0,
-									_p17._0(model) + _p17._1))
+									_p21._0(model) + _p21._1))
 						});
 				case 'IncrementSat':
 					return _elm_lang$core$Native_Utils.update(
@@ -10865,7 +11307,7 @@ var _mwm126$ahu$Ahu$update = F2(
 								A2(
 									_elm_lang$core$Basics$min,
 									60.0,
-									_p17._0(model) + _p17._1))
+									_p21._0(model) + _p21._1))
 						});
 				case 'IncrementCfm':
 					return _elm_lang$core$Native_Utils.update(
@@ -10877,7 +11319,7 @@ var _mwm126$ahu$Ahu$update = F2(
 								A2(
 									_elm_lang$core$Basics$min,
 									40000.0,
-									_p17._0(model) + _p17._1))
+									_p21._0(model) + _p21._1))
 						});
 				case 'IncrementOat':
 					return _elm_lang$core$Native_Utils.update(
@@ -10889,7 +11331,7 @@ var _mwm126$ahu$Ahu$update = F2(
 								A2(
 									_elm_lang$core$Basics$min,
 									94.0,
-									_p17._0(model) + _p17._1))
+									_p21._0(model) + _p21._1))
 						});
 				case 'IncrementOawb':
 					return _elm_lang$core$Native_Utils.update(
@@ -10901,7 +11343,7 @@ var _mwm126$ahu$Ahu$update = F2(
 								A2(
 									_elm_lang$core$Basics$min,
 									94.0,
-									_p17._0(model) + _p17._1))
+									_p21._0(model) + _p21._1))
 						});
 				case 'IncrementTons':
 					return _elm_lang$core$Native_Utils.update(
@@ -10913,7 +11355,7 @@ var _mwm126$ahu$Ahu$update = F2(
 								A2(
 									_elm_lang$core$Basics$min,
 									100.0,
-									_p17._0(model) + _p17._1))
+									_p21._0(model) + _p21._1))
 						});
 				case 'IncrementShf':
 					return _elm_lang$core$Native_Utils.update(
@@ -10921,23 +11363,23 @@ var _mwm126$ahu$Ahu$update = F2(
 						{
 							shf: A2(
 								_elm_lang$core$Basics$max,
-								0.5,
+								0.0,
 								A2(
 									_elm_lang$core$Basics$min,
 									1.0,
-									_p17._0(model) + _p17._1))
+									_p21._0(model) + _p21._1))
 						});
 				case 'IncrementCycle':
 					return _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							cycle: _p17._0(model) + _p17._1
+							cycle: _p21._0(model) + _p21._1
 						});
 				default:
 					return _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							time: A2(_mwm126$ahu$Ahu$time_mod, _p17._0, model),
+							time: A2(_mwm126$ahu$Ahu$time_mod, _p21._0, model),
 							room_rh: _mwm126$ahu$AhuModel$new_room_rel_humidity(model),
 							room_t: _mwm126$ahu$AhuModel$new_room_t(model)
 						});

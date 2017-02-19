@@ -53,7 +53,13 @@ subscriptions model = Time.every (0.1 * second) Tick
 
 ctrl_style = Html.Attributes.style
         [ ( "float", "left" )
-        , ( "width", "30%" )
+        , ( "width", "50%" )
+        , ( "display", "inline-block" )
+        ]
+
+show_style = Html.Attributes.style
+        [ ( "float", "right" )
+        , ( "width", "50%" )
         , ( "display", "inline-block" )
         ]
 
@@ -69,42 +75,52 @@ view model =
         shf_in = shf_inflow model
     in
   Html.article [] [
-       Html.section [ Html.Attributes.style [ ( "float", "left"), ("width", "50%"), ("position", "fixed")] ] [
+       Html.section [ Html.Attributes.style [ ( "float", "left")
+                                            , ("width", "50%")
+                                            , ("position", "fixed")
+                                            , ("padding", "1%")
+                                            ] ] [
             div [ ctrl_style ]
-                [ Html.text "Adjust system"
-                , div [blueStyle]
-                    [ control IncrementOap .oa_p 5 "Outside Air %" model
-                    , control IncrementSat .sa_t 1 "Supply Air Temp" model
-                    , control IncrementCfm .cfm 1000 "CFM" model
-                    ]
-                , Html.text "Adjust weather"
+                -- [ Html.text "Adjust system"
+                [ Html.text "Setup the system by specifying weather..."
                 , div [redStyle]
                     [ control IncrementOat .oa_t 1 "Outside Air Temp" model
                     , control IncrementOawb .oa_wb 3 "Outside Air Wet Bulb" model
                     ]
-                , Html.text "Adjust load"
+                , Html.p [] []
+                , Html.text "Setup the system by specifying load..."
                 , div [grayStyle]
                     [ control IncrementTons .tons 5 "Tons" model
                     , control IncrementShf .shf 0.05 "SHF" model -- TODO: limit precision
                     , control IncrementCycle .cycle 1 "sim cycle (seconds)" model
                     , control IncrementShf .time 0.05 "Time" model
                     ]
+                , Html.p [] []
+                , Html.text "Now adjust the system to maintain comfort."
+                , div [blueStyle]
+                    [ control IncrementOap .oa_p 5 "Outside Air %" model
+                    , control IncrementSat .sa_t 1 "Supply Air Temp" model
+                    , control IncrementCfm .cfm 1000 "CFM" model
+                    ]
+                ]
+           , div [ show_style ]
+                [ Html.text "The results are:", Html.p [] []
                 , Html.text (room_comment model), Html.p [] []
-                , show "room_t" model.room_t, Html.p [] []
-                , show "shf_in" shf_in, Html.p [] []
-                , show "q_in" q_in, Html.p [] []
+                , show "temperature inside the building" model.room_t, Html.p [] []
+                , show "sensible heat factor of the building:" shf_in, Html.p [] []
+                , show "Heat entering the building:" q_in, Html.p [] []
                 , show "room_abs_hum" <| room_abs_hum model, Html.p [] []
                 ]
            , div [ Html.Attributes.style [ ( "margin-left", "100px")] ]
-                [ svg [viewBox "0 0 600 400", Svg.Attributes.width "60%" ]
+                [ svg [viewBox "0 0 600 400", Svg.Attributes.width "100%" ]
                       (List.concat [ (protractor pro_x pro_y model)
                                    , house model
                                    , psych_chart model])
                 ]
            ]
       , Html.section [ Html.Attributes.style [ ( "float", "right"), ("width", "50%"), ("overflow-y", "scroll")] ]
-          [ Html.article [] [ Markdown.toHtml [] ahutext ]
-          ]
+           [ Html.article [] [ Markdown.toHtml [] ahutext ]
+           ]
       ]
 
 -- for drawing the house
@@ -150,18 +166,6 @@ house model =
         , pie rx ry 10 -0.25 (1.0-model.oa_p/100-0.25) (sprite_states model).air_color
         ]
 
-debug model shf_in q_in room_abs_hum =
-    let
-        r2 x = toString <| roundn 2 x
-        show name value = Html.text (name ++ r2 value)
-    in
-        div [grayStyle] [
-             show "room_t" model.room_t
-            ]
-    -- Html.text ("room_t = " ++ r2 model.room_t ++
-    --                " shf_in="++r2 shf_in ++
-    --                " q_in="++r2 q_in ++
-    --                " room_abs_hum =" ++ r2 room_abs_hum )
 
 protractor : Float -> Float -> Model -> List ( Svg msg)
 protractor t u model =
@@ -181,8 +185,7 @@ protractor t u model =
         -- [
         [ pieline x_1 y_1 (round model.tons) 0 0.5
             -- room center
-        -- , Svg.text_ [ x (toString x_1), y (toString y_1), dx "5", dy "-5", fontSize "10"   ] [ Html.text "Cooling Vectors (BTU/Hr)" ]
-        , Svg.text_ [ x (toString x_1), y (toString y_1), dx "5", dy "-5", fontSize "10"   ] [ debug model shf_in q_in room_abs_hum ]
+        , Svg.text_ [ x (toString x_1), y (toString y_1), dx "5", dy "-5", fontSize "10"   ] [ Html.text "Cooling Vectors (BTU/Hr)" ]
         , circle [ cx (toString x_1), cy (toString y_1), r "4", fill "green" ] [ ]
         , Svg.text_ [ x (toString x_1), y (toString y_1), dx "5", dy "5", fontSize "10"   ] [ Html.text "room" ]
             -- load vector
