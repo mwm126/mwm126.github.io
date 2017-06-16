@@ -15917,166 +15917,299 @@ var _mwm126$ahu$AhuUnits$toTime = function (s) {
 		return 0.0;
 	}
 };
-var _mwm126$ahu$AhuUnits$inBtusPerHour = function (p) {
-	var _p1 = p;
-	if (_p1.ctor === 'BtuPerHour') {
-		return _p1._0;
-	} else {
-		return _p1._0 * 12000;
-	}
-};
 var _mwm126$ahu$AhuUnits$inBtusPerLb = function (p) {
+	var _p1 = p;
+	return _p1._0;
+};
+var _mwm126$ahu$AhuUnits$inBtusPerHour = function (p) {
 	var _p2 = p;
-	return _p2._0;
+	switch (_p2.ctor) {
+		case 'BtuPerHour':
+			return _p2._0;
+		case 'Kilowatts':
+			return _p2._0 * 3412.142;
+		default:
+			return _p2._0 * 12000;
+	}
 };
 var _mwm126$ahu$AhuUnits$inTons = function (p) {
 	var _p3 = p;
-	if (_p3.ctor === 'BtuPerHour') {
-		return _p3._0 / 12000;
-	} else {
-		return _p3._0;
+	switch (_p3.ctor) {
+		case 'BtuPerHour':
+			return _p3._0 / 12000;
+		case 'Kilowatts':
+			return _p3._0 / 3.5168525;
+		default:
+			return _p3._0;
 	}
 };
-var _mwm126$ahu$AhuUnits$inFahrenheit = function (t) {
-	var _p4 = t;
+var _mwm126$ahu$AhuUnits$inKilowatts = function (p) {
+	var _p4 = p;
 	switch (_p4.ctor) {
-		case 'Fahrenheit':
+		case 'BtuPerHour':
+			return _p4._0 * 2.9307107e-4;
+		case 'Kilowatts':
 			return _p4._0;
-		case 'Celsius':
-			return ((_p4._0 * 9) / 5) + 32;
 		default:
-			return (((_p4._0 - 273.15) * 9) / 5) + 32;
+			return _p4._0 * 3.5168;
 	}
 };
-var _mwm126$ahu$AhuUnits$inCelsius = function (t) {
-	var _p5 = t;
-	switch (_p5.ctor) {
-		case 'Fahrenheit':
-			return ((_p5._0 - 32) * 5) / 9;
-		case 'Celsius':
-			return _p5._0;
-		default:
-			return _p5._0 - 273.15;
-	}
-};
-var _mwm126$ahu$AhuUnits$inKelvin = function (t) {
+var _mwm126$ahu$AhuUnits$inUnitsPower = F2(
+	function (sys, power) {
+		var _p5 = sys;
+		if (_p5.ctor === 'Metric') {
+			return _mwm126$ahu$AhuUnits$inKilowatts(power);
+		} else {
+			return _mwm126$ahu$AhuUnits$inTons(power);
+		}
+	});
+var _mwm126$ahu$AhuUnits$inFahrenheit = function (t) {
 	var _p6 = t;
 	switch (_p6.ctor) {
 		case 'Fahrenheit':
-			return (((_p6._0 - 32) * 5) / 9) + 273.15;
-		case 'Celsius':
-			return _p6._0 + 273.15;
-		default:
 			return _p6._0;
+		case 'Celsius':
+			return ((_p6._0 * 9) / 5) + 32;
+		default:
+			return (((_p6._0 - 273.15) * 9) / 5) + 32;
 	}
 };
-var _mwm126$ahu$AhuUnits$inHectoPascals = function (p) {
-	var _p7 = p;
+var _mwm126$ahu$AhuUnits$inCelsius = function (t) {
+	var _p7 = t;
 	switch (_p7.ctor) {
-		case 'HectoPascal':
+		case 'Fahrenheit':
+			return ((_p7._0 - 32) * 5) / 9;
+		case 'Celsius':
 			return _p7._0;
-		case 'Pascal':
-			return _p7._0 / 100;
 		default:
-			return _p7._0 * 68.9476;
+			return _p7._0 - 273.15;
 	}
 };
-var _mwm126$ahu$AhuUnits$inPascals = function (p) {
-	var _p8 = p;
-	switch (_p8.ctor) {
-		case 'Pascal':
-			return _p8._0;
-		case 'HectoPascal':
-			return _p8._0 * 100;
-		default:
-			return _p8._0 * 6894.76;
-	}
-};
-var _mwm126$ahu$AhuUnits$inPSI = function (p) {
-	var _p9 = p;
+var _mwm126$ahu$AhuUnits$inUnits = F2(
+	function (sys, temperature) {
+		var _p8 = sys;
+		if (_p8.ctor === 'Metric') {
+			return _mwm126$ahu$AhuUnits$inCelsius(temperature);
+		} else {
+			return _mwm126$ahu$AhuUnits$inFahrenheit(temperature);
+		}
+	});
+var _mwm126$ahu$AhuUnits$inKelvin = function (t) {
+	var _p9 = t;
 	switch (_p9.ctor) {
-		case 'HectoPascal':
-			return _p9._0 * 1.45038e-2;
-		case 'Pascal':
-			return _p9._0 * 1.45038e-4;
+		case 'Fahrenheit':
+			return (((_p9._0 - 32) * 5) / 9) + 273.15;
+		case 'Celsius':
+			return _p9._0 + 273.15;
 		default:
 			return _p9._0;
 	}
 };
-var _mwm126$ahu$AhuUnits$inLb = function (p) {
+var _mwm126$ahu$AhuUnits$inHectoPascals = function (p) {
 	var _p10 = p;
-	return _p10._0;
+	switch (_p10.ctor) {
+		case 'HectoPascal':
+			return _p10._0;
+		case 'Pascal':
+			return _p10._0 / 100;
+		default:
+			return _p10._0 * 68.9476;
+	}
+};
+var _mwm126$ahu$AhuUnits$inPascals = function (p) {
+	var _p11 = p;
+	switch (_p11.ctor) {
+		case 'Pascal':
+			return _p11._0;
+		case 'HectoPascal':
+			return _p11._0 * 100;
+		default:
+			return _p11._0 * 6894.76;
+	}
+};
+var _mwm126$ahu$AhuUnits$inPSI = function (p) {
+	var _p12 = p;
+	switch (_p12.ctor) {
+		case 'HectoPascal':
+			return _p12._0 * 1.45038e-2;
+		case 'Pascal':
+			return _p12._0 * 1.45038e-4;
+		default:
+			return _p12._0;
+	}
+};
+var _mwm126$ahu$AhuUnits$inLb = function (p) {
+	var _p13 = p;
+	return _p13._0;
 };
 var _mwm126$ahu$AhuUnits$inHours = function (t) {
-	var _p11 = t;
-	switch (_p11.ctor) {
+	var _p14 = t;
+	switch (_p14.ctor) {
 		case 'Seconds':
-			return _p11._0 / 3600;
+			return _p14._0 / 3600;
 		case 'Minutes':
-			return _p11._0 / 60;
+			return _p14._0 / 60;
 		default:
-			return _p11._0;
+			return _p14._0;
 	}
 };
 var _mwm126$ahu$AhuUnits$inMinutes = function (t) {
-	var _p12 = t;
-	switch (_p12.ctor) {
+	var _p15 = t;
+	switch (_p15.ctor) {
 		case 'Seconds':
-			return _p12._0 / 60;
+			return _p15._0 / 60;
 		case 'Minutes':
-			return _p12._0;
+			return _p15._0;
 		default:
-			return _p12._0 * 60;
+			return _p15._0 * 60;
 	}
 };
 var _mwm126$ahu$AhuUnits$inSeconds = function (t) {
-	var _p13 = t;
-	switch (_p13.ctor) {
+	var _p16 = t;
+	switch (_p16.ctor) {
 		case 'Seconds':
-			return _p13._0;
+			return _p16._0;
 		case 'Minutes':
-			return _p13._0 * 60;
+			return _p16._0 * 60;
 		default:
-			return _p13._0 * 3600;
+			return _p16._0 * 3600;
 	}
 };
 var _mwm126$ahu$AhuUnits$inHumidityRatio = function (t) {
-	var _p14 = t;
-	return _p14._0;
+	var _p17 = t;
+	return _p17._0;
 };
 var _mwm126$ahu$AhuUnits$inLbPerCubicFoot = function (d) {
-	var _p15 = d;
-	if (_p15.ctor === 'KgPerCubicMeter') {
-		return _p15._0 * 6.2428e-2;
+	var _p18 = d;
+	if (_p18.ctor === 'KgPerCubicMeter') {
+		return _p18._0 * 6.2428e-2;
 	} else {
-		return _p15._0;
+		return _p18._0;
 	}
 };
 var _mwm126$ahu$AhuUnits$inKgPerCubicMeter = function (d) {
-	var _p16 = d;
-	if (_p16.ctor === 'KgPerCubicMeter') {
-		return _p16._0;
+	var _p19 = d;
+	if (_p19.ctor === 'KgPerCubicMeter') {
+		return _p19._0;
 	} else {
-		return _p16._0 / 6.2428e-2;
+		return _p19._0 / 6.2428e-2;
 	}
 };
-var _mwm126$ahu$AhuUnits$inPercent = function (_p17) {
-	var _p18 = _p17;
-	return _p18._0;
+var _mwm126$ahu$AhuUnits$inPercent = function (_p20) {
+	var _p21 = _p20;
+	return _p21._0;
 };
+var _mwm126$ahu$AhuUnits$roundn = F2(
+	function (n, x) {
+		var f = _elm_lang$core$Basics$toFloat(
+			Math.pow(10, n));
+		var scaled = f * x;
+		var fh = _elm_lang$core$Basics$toFloat(
+			_elm_lang$core$Basics$round(scaled));
+		return fh / f;
+	});
+var _mwm126$ahu$AhuUnits$inUnitsString = F2(
+	function (sys, temperature) {
+		var _p22 = sys;
+		if (_p22.ctor === 'Metric') {
+			return A2(
+				_elm_lang$core$Basics_ops['++'],
+				_elm_lang$core$Basics$toString(
+					A2(
+						_mwm126$ahu$AhuUnits$roundn,
+						1,
+						_mwm126$ahu$AhuUnits$inCelsius(temperature))),
+				'(°C)');
+		} else {
+			return A2(
+				_elm_lang$core$Basics_ops['++'],
+				_elm_lang$core$Basics$toString(
+					A2(
+						_mwm126$ahu$AhuUnits$roundn,
+						1,
+						_mwm126$ahu$AhuUnits$inFahrenheit(temperature))),
+				'(°F)');
+		}
+	});
+var _mwm126$ahu$AhuUnits$inUnitsPowerString = F2(
+	function (sys, power) {
+		var _p23 = sys;
+		if (_p23.ctor === 'Metric') {
+			return A2(
+				_elm_lang$core$Basics_ops['++'],
+				_elm_lang$core$Basics$toString(
+					A2(
+						_mwm126$ahu$AhuUnits$roundn,
+						1,
+						_mwm126$ahu$AhuUnits$inKilowatts(power))),
+				'(kW)');
+		} else {
+			return A2(
+				_elm_lang$core$Basics_ops['++'],
+				_elm_lang$core$Basics$toString(
+					A2(
+						_mwm126$ahu$AhuUnits$roundn,
+						1,
+						_mwm126$ahu$AhuUnits$inTons(power))),
+				' (tons)');
+		}
+	});
+var _mwm126$ahu$AhuUnits$inCubicFeetPerMinute = function (d) {
+	var _p24 = d;
+	if (_p24.ctor === 'CubicMetersPerSecond') {
+		return _p24._0 * 2118.88;
+	} else {
+		return _p24._0;
+	}
+};
+var _mwm126$ahu$AhuUnits$inCubicMetersPerSecond = function (d) {
+	var _p25 = d;
+	if (_p25.ctor === 'CubicMetersPerSecond') {
+		return _p25._0;
+	} else {
+		return _p25._0 * 4.71947e-4;
+	}
+};
+var _mwm126$ahu$AhuUnits$inUnitsAirflow = F2(
+	function (sys, airflow) {
+		var _p26 = sys;
+		if (_p26.ctor === 'Metric') {
+			return _mwm126$ahu$AhuUnits$inCubicMetersPerSecond(airflow);
+		} else {
+			return _mwm126$ahu$AhuUnits$inCubicFeetPerMinute(airflow);
+		}
+	});
+var _mwm126$ahu$AhuUnits$inUnitsAirflowString = F2(
+	function (sys, airflow) {
+		var _p27 = sys;
+		if (_p27.ctor === 'Metric') {
+			return A2(
+				_elm_lang$core$Basics_ops['++'],
+				_elm_lang$core$Basics$toString(
+					A2(
+						_mwm126$ahu$AhuUnits$roundn,
+						1,
+						_mwm126$ahu$AhuUnits$inCubicMetersPerSecond(airflow))),
+				'(cubic m/s)');
+		} else {
+			return A2(
+				_elm_lang$core$Basics_ops['++'],
+				_elm_lang$core$Basics$toString(
+					A2(
+						_mwm126$ahu$AhuUnits$roundn,
+						1,
+						_mwm126$ahu$AhuUnits$inCubicFeetPerMinute(airflow))),
+				' (cfm)');
+		}
+	});
 var _mwm126$ahu$AhuUnits$AirDensity = function (a) {
 	return {ctor: 'AirDensity', _0: a};
 };
+var _mwm126$ahu$AhuUnits$CubicMetersPerSecond = function (a) {
+	return {ctor: 'CubicMetersPerSecond', _0: a};
+};
 var _mwm126$ahu$AhuUnits$CubicFeetPerMinute = function (a) {
 	return {ctor: 'CubicFeetPerMinute', _0: a};
-};
-var _mwm126$ahu$AhuUnits$toAirflow = function (s) {
-	var _p19 = _elm_lang$core$String$toFloat(s);
-	if (_p19.ctor === 'Ok') {
-		return _mwm126$ahu$AhuUnits$CubicFeetPerMinute(_p19._0);
-	} else {
-		return _mwm126$ahu$AhuUnits$CubicFeetPerMinute(0.0);
-	}
 };
 var _mwm126$ahu$AhuUnits$KgPerCubicMeter = function (a) {
 	return {ctor: 'KgPerCubicMeter', _0: a};
@@ -16096,13 +16229,16 @@ var _mwm126$ahu$AhuUnits$MolecularRatio = function (a) {
 var _mwm126$ahu$AhuUnits$Lb = function (a) {
 	return {ctor: 'Lb', _0: a};
 };
+var _mwm126$ahu$AhuUnits$Kilowatts = function (a) {
+	return {ctor: 'Kilowatts', _0: a};
+};
 var _mwm126$ahu$AhuUnits$Tons = function (a) {
 	return {ctor: 'Tons', _0: a};
 };
 var _mwm126$ahu$AhuUnits$toTons = function (s) {
-	var _p20 = _elm_lang$core$String$toFloat(s);
-	if (_p20.ctor === 'Ok') {
-		return _mwm126$ahu$AhuUnits$Tons(_p20._0);
+	var _p28 = _elm_lang$core$String$toFloat(s);
+	if (_p28.ctor === 'Ok') {
+		return _mwm126$ahu$AhuUnits$Tons(_p28._0);
 	} else {
 		return _mwm126$ahu$AhuUnits$Tons(0.0);
 	}
@@ -16123,9 +16259,9 @@ var _mwm126$ahu$AhuUnits$HPercent = function (a) {
 	return {ctor: 'HPercent', _0: a};
 };
 var _mwm126$ahu$AhuUnits$toHPercent = function (s) {
-	var _p21 = _elm_lang$core$String$toFloat(s);
-	if (_p21.ctor === 'Ok') {
-		return _mwm126$ahu$AhuUnits$HPercent(_p21._0);
+	var _p29 = _elm_lang$core$String$toFloat(s);
+	if (_p29.ctor === 'Ok') {
+		return _mwm126$ahu$AhuUnits$HPercent(_p29._0);
 	} else {
 		return _mwm126$ahu$AhuUnits$HPercent(0.0);
 	}
@@ -16163,6 +16299,8 @@ var _mwm126$ahu$AhuUnits$Minutes = function (a) {
 var _mwm126$ahu$AhuUnits$Seconds = function (a) {
 	return {ctor: 'Seconds', _0: a};
 };
+var _mwm126$ahu$AhuUnits$Imperial = {ctor: 'Imperial'};
+var _mwm126$ahu$AhuUnits$Metric = {ctor: 'Metric'};
 var _mwm126$ahu$AhuModel$enthalpy_h2o = function (air) {
 	var t = _mwm126$ahu$AhuUnits$inFahrenheit(air.t);
 	return _mwm126$ahu$AhuUnits$BTUsPerPound(1061 + (0.444 * t));
@@ -16197,7 +16335,7 @@ var _mwm126$ahu$AhuModel$init_model = {
 		rh: _mwm126$ahu$AhuUnits$HPercent(95)
 	},
 	oa_p: 30,
-	cfm: _mwm126$ahu$AhuUnits$CubicFeetPerMinute(30000),
+	airflow: _mwm126$ahu$AhuUnits$CubicFeetPerMinute(30000),
 	outside_air_t: _mwm126$ahu$AhuUnits$Fahrenheit(90),
 	outside_air_wb: _mwm126$ahu$AhuUnits$Fahrenheit(75),
 	load: _mwm126$ahu$AhuUnits$Tons(65),
@@ -16208,7 +16346,8 @@ var _mwm126$ahu$AhuModel$init_model = {
 		rh: _mwm126$ahu$AhuUnits$HPercent(50)
 	},
 	mdl: _debois$elm_mdl$Material$model,
-	tab: 0
+	tab: 0,
+	system: _mwm126$ahu$AhuUnits$Imperial
 };
 var _mwm126$ahu$AhuModel$specific_gas_constant_h2o = _mwm126$ahu$AhuUnits$JoulePerKgPerK(461.5);
 var _mwm126$ahu$AhuModel$relative_humidity = F2(
@@ -16242,10 +16381,9 @@ var _mwm126$ahu$AhuModel$q_sensible = function (model) {
 	var supply_t = _mwm126$ahu$AhuUnits$inFahrenheit(model.supply_air.t);
 	var building_t = _mwm126$ahu$AhuUnits$inFahrenheit(model.building_air.t);
 	var delta_t = building_t - supply_t;
-	var _p6 = model.cfm;
-	var cfm = _p6._0;
+	var airflow = _mwm126$ahu$AhuUnits$inCubicFeetPerMinute(model.airflow);
 	var rho = _mwm126$ahu$AhuUnits$inLbPerCubicFoot(_mwm126$ahu$AhuModel$air_density);
-	var lb_air_per_hour = (60 * cfm) * rho;
+	var lb_air_per_hour = (60 * airflow) * rho;
 	var load = (lb_air_per_hour * cp) * delta_t;
 	return _mwm126$ahu$AhuUnits$BtuPerHour(load);
 };
@@ -16257,8 +16395,8 @@ var _mwm126$ahu$AhuModel$new_building_t = F2(
 		var supply = _mwm126$ahu$AhuUnits$inBtusPerHour(
 			_mwm126$ahu$AhuModel$q_sensible(model));
 		var load = _mwm126$ahu$AhuUnits$inBtusPerHour(model.load);
-		var _p7 = _mwm126$ahu$AhuModel$building_heat_capacitance;
-		var cp = _p7._0;
+		var _p6 = _mwm126$ahu$AhuModel$building_heat_capacitance;
+		var cp = _p6._0;
 		var current_building_t = _mwm126$ahu$AhuUnits$inFahrenheit(model.building_air.t);
 		return _mwm126$ahu$AhuUnits$Fahrenheit(current_building_t + ((s * ((load * shf) - supply)) / cp));
 	});
@@ -16266,8 +16404,8 @@ var _mwm126$ahu$AhuModel$building_volume = _mwm126$ahu$AhuUnits$CubicFeet(250000
 var _mwm126$ahu$AhuModel$atm = _mwm126$ahu$AhuUnits$PSI(14.696);
 var _mwm126$ahu$AhuModel$humidity_ratio = function (air) {
 	var p_air = _mwm126$ahu$AhuUnits$inPSI(_mwm126$ahu$AhuModel$atm);
-	var _p8 = air.rh;
-	var rh = _p8._0;
+	var _p7 = air.rh;
+	var rh = _p7._0;
 	var t = air.t;
 	var p_h2o_sat = _mwm126$ahu$AhuModel$h2o_saturation_vapor_pressure(t);
 	var p_h2o_sat_psi = _mwm126$ahu$AhuUnits$inPSI(p_h2o_sat);
@@ -16276,18 +16414,17 @@ var _mwm126$ahu$AhuModel$humidity_ratio = function (air) {
 	return _mwm126$ahu$AhuUnits$MolecularRatio(0.62198 * (p_h2o / (p_air - p_h2o)));
 };
 var _mwm126$ahu$AhuModel$q_total_in = function (model) {
-	var _p9 = model.cfm;
-	var cfm = _p9._0;
+	var airflow = _mwm126$ahu$AhuUnits$inCubicFeetPerMinute(model.airflow);
 	var rho = _mwm126$ahu$AhuUnits$inLbPerCubicFoot(_mwm126$ahu$AhuModel$air_density);
-	var sa_lb_per_hour = (60 * cfm) * rho;
+	var sa_lb_per_hour = (60 * airflow) * rho;
 	var supply_ah = _mwm126$ahu$AhuModel$humidity_ratio(model.supply_air);
 	var building_ah = _mwm126$ahu$AhuModel$humidity_ratio(model.building_air);
 	var supply_t = model.supply_air.t;
-	var _p10 = A2(_mwm126$ahu$AhuModel$enthalpy, supply_ah, supply_t);
-	var supply_h = _p10._0;
+	var _p8 = A2(_mwm126$ahu$AhuModel$enthalpy, supply_ah, supply_t);
+	var supply_h = _p8._0;
 	var building_t = model.building_air.t;
-	var _p11 = A2(_mwm126$ahu$AhuModel$enthalpy, building_ah, building_t);
-	var building_h = _p11._0;
+	var _p9 = A2(_mwm126$ahu$AhuModel$enthalpy, building_ah, building_t);
+	var building_h = _p9._0;
 	var delta_h = building_h - supply_h;
 	var qinflow = sa_lb_per_hour * delta_h;
 	return _mwm126$ahu$AhuUnits$BtuPerHour(qinflow);
@@ -16302,41 +16439,39 @@ var _mwm126$ahu$AhuModel$supply_shf = function (model) {
 var _mwm126$ahu$AhuModel$new_water_in = F2(
 	function (model, dt) {
 		var s = _mwm126$ahu$AhuUnits$inMinutes(dt);
-		var _p12 = _mwm126$ahu$AhuModel$humidity_ratio(model.supply_air);
-		var w = _p12._0;
+		var _p10 = _mwm126$ahu$AhuModel$humidity_ratio(model.supply_air);
+		var w = _p10._0;
 		var rho = _mwm126$ahu$AhuUnits$inLbPerCubicFoot(_mwm126$ahu$AhuModel$air_density);
-		var _p13 = model.cfm;
-		var supply_air_cfm = _p13._0;
-		return _mwm126$ahu$AhuUnits$Lb(((w * rho) * supply_air_cfm) * s);
+		var supply_air_airflow = _mwm126$ahu$AhuUnits$inCubicFeetPerMinute(model.airflow);
+		return _mwm126$ahu$AhuUnits$Lb(((w * rho) * supply_air_airflow) * s);
 	});
 var _mwm126$ahu$AhuModel$new_water_out = F2(
 	function (model, dt) {
 		var s = _mwm126$ahu$AhuUnits$inMinutes(dt);
-		var _p14 = _mwm126$ahu$AhuModel$humidity_ratio(model.building_air);
-		var w = _p14._0;
+		var _p11 = _mwm126$ahu$AhuModel$humidity_ratio(model.building_air);
+		var w = _p11._0;
 		var rho = _mwm126$ahu$AhuUnits$inLbPerCubicFoot(_mwm126$ahu$AhuModel$air_density);
-		var _p15 = model.cfm;
-		var outflow_air_cfm = _p15._0;
-		return _mwm126$ahu$AhuUnits$Lb(((w * rho) * outflow_air_cfm) * s);
+		var outflow_air_airflow = _mwm126$ahu$AhuUnits$inCubicFeetPerMinute(model.airflow);
+		return _mwm126$ahu$AhuUnits$Lb(((w * rho) * outflow_air_airflow) * s);
 	});
 var _mwm126$ahu$AhuModel$new_building_h2o = F2(
 	function (model, dt) {
-		var _p16 = A2(_mwm126$ahu$AhuModel$new_water_out, model, dt);
-		var h2o_outflow = _p16._0;
-		var _p17 = A2(_mwm126$ahu$AhuModel$new_water_from_building, model, dt);
-		var h2o_building = _p17._0;
-		var _p18 = A2(_mwm126$ahu$AhuModel$new_water_in, model, dt);
-		var h2o_supply = _p18._0;
+		var _p12 = A2(_mwm126$ahu$AhuModel$new_water_out, model, dt);
+		var h2o_outflow = _p12._0;
+		var _p13 = A2(_mwm126$ahu$AhuModel$new_water_from_building, model, dt);
+		var h2o_building = _p13._0;
+		var _p14 = A2(_mwm126$ahu$AhuModel$new_water_in, model, dt);
+		var h2o_supply = _p14._0;
 		return _mwm126$ahu$AhuUnits$Lb((h2o_supply + h2o_building) - h2o_outflow);
 	});
 var _mwm126$ahu$AhuModel$new_building_abs_humidity = F2(
 	function (model, dt) {
 		var abs_humidity = _mwm126$ahu$AhuUnits$inLbPerCubicFoot(
 			_mwm126$ahu$AhuModel$absolute_humidity(model.building_air));
-		var _p19 = _mwm126$ahu$AhuModel$building_volume;
-		var v = _p19._0;
-		var _p20 = A2(_mwm126$ahu$AhuModel$new_building_h2o, model, dt);
-		var delta_h2o = _p20._0;
+		var _p15 = _mwm126$ahu$AhuModel$building_volume;
+		var v = _p15._0;
+		var _p16 = A2(_mwm126$ahu$AhuModel$new_building_h2o, model, dt);
+		var delta_h2o = _p16._0;
 		var new_h2o = (v * abs_humidity) + delta_h2o;
 		return _mwm126$ahu$AhuUnits$LbPerCubicFoot(new_h2o / v);
 	});
@@ -16369,7 +16504,9 @@ var _mwm126$ahu$AhuModel$Model = function (a) {
 								return function (i) {
 									return function (j) {
 										return function (k) {
-											return {supply_air: a, oa_p: b, cfm: c, outside_air_t: d, outside_air_wb: e, load: f, load_shf: g, time: h, building_air: i, mdl: j, tab: k};
+											return function (l) {
+												return {supply_air: a, oa_p: b, airflow: c, outside_air_t: d, outside_air_wb: e, load: f, load_shf: g, time: h, building_air: i, mdl: j, tab: k, system: l};
+											};
 										};
 									};
 								};
@@ -16382,10 +16519,7 @@ var _mwm126$ahu$AhuModel$Model = function (a) {
 	};
 };
 var _mwm126$ahu$AhuText$ahutext = '\nVolume 3 No.2, Spring 1999\nISSN# 1523-9926\n\n# Simulating the performance of an Air Handling Unit on a Psychrometric Chart\n\nBy\n\nDavid B. Meredith <dxm15@psu.edu>\nMark W Meredith <mwm126@gmail.com>\n\nSchool of Engineering Technology Department of Engineering Science\nand Commonwealth Engineering The Pennsylvania State University\nThe Pennsylvania State University\n\n# Abstract\n\nWhen teaching the principles of Heating, Ventilating and Air-conditioning, it is\nusually difficult to get students to visualize the interaction among all of the\ninter-dependent variables as they pass through an Air Handling Unit (AHU).\nSimilarly, it is difficult to explain how these processes would appear on a\npsychrometric chart. The Web-based software package (JAVA) was developed to\nassist faculty who teach in these disciplines, and to demonstrate to students\nthe various functions and relationships involved.\n\n\n# Introduction\n\nThere are three basic fields to this page. In the upper left corner is an\nanimated and interactive model of the airflow through the AHU. The right side of\nthe page shows an animated and interactive psychrometric chart including a\nsensible heat factor protractor. The bottom left corner contains an interactive\ncontrol panel for adjusting parameters in the simulation. Each of these sections\nwill be discussed in detail below.\n\n\n# The Air Handling Unit\n\nThe user can observe the representative air molecule as it passes through the\nunit . As the air molecule passes through this loop, its color changes to\nrepresent the air temperature on a color spectrum scale (red is relatively hot\nand blue is relatively cool). The flow rate and fraction of outside air can be\nadjusted by the user.\n\nA fraction of the conditioned return air is exhausted to the outside (EA) and\nreplaced with outside air (OA). This flow of fresh air into the building is\nrequired to maintain good indoor air quality (IAQ), but the quantity of outside\nair (as a percentage of the total airflow) can be adjusted by the user. The\nmixed air (MA) then passes through the cooling coil where both sensible energy\n(temperature) and latent energy (moisture) are removed from the air stream to\nbecome supply air (SA). The cooled and dehumidified air is then ducted into the\nbuilding to absorb energy and moisture from the thermal load.\n\n# The Psychrometric Chart\n\nThe right side of the page displays the animated and interactive psychrometric\nchart. The horizontal axis represents dry bulb temperature (sensible energy) and\nthe vertical axis represents absolute humidity ratio (latent energy). The\nsaturation line is also indicated on this chart. Superimposed on this chart is a\nrectangle representing the nominal comfort zone used in the HVAC&R industry. The\nboundaries of this zone range from 70 to 80F on the horizontal scale and from\n0.005 to 0.010 pounds of water vapor per pound of dry air on the vertical axis.\nAlso functioning in the psychrometric chart window is the Sensible Heat Factor\n(SHF) protractor with two animated vectors. One vector represents the cooling\nload required by the building and the other vector represents the cooling\nsupplied by the cooling system. Equilibrium exists when these two vectors are\nconcentric.\n\n\n# Control Panel and Limitations\n\nThe lower left window on the screen contains the control panel where the user\ncan modify various parameters. These are grouped into several related functions.\nThe first three parameters are usually controlled by the building mechanical\nmanager. The second group represent the outside air conditions, and the third\ngroup represent the building load parameters. The bottom line of the control\npanel allows the user to adjust the Simulation Speed. The speed can be varied\nfrom very slow (to watch the processes occur simultaneously in the AHU and on\nthe psychrometric chart) to fast (to observe how changes are reflected in the\nlocation of the room air within the comfort zone).\n\nChanging the Percent of Outside Air moves the location of the Mixed Air\ncondition on the psychrometric chart, and also affects the fraction of the air\nmolecule in the AHU that exits as exhaust air and returns as supply air. While\nchanging this parameter can have a major effect on the thermal load on the\ncooling coil and the overall cost of cooling a building, this program is not\ndesigned to address those issues. The Supply Air flow rate can be adjusted to\nmatch the load requirements. This action demonstrates the use of Variable Air\nVolume (VAV) systems commonly found in commercial projects today. The second\nmethod of modifying the cooling rate is to change the Supply Air Temperature\n(commonly referred to as reset). The interaction between these two parameters\nhas strong implications for the operating cost of the overall system, but that\nissue is beyond the scope of this project.\n\nThe Outside Air Temperature and the outside Wet Bulb Temperature represent the\nambient weather conditions. The primary effect in this simulation is to alter\nthe location of the OA point on the psychrometric chart. In a real sense, the\noutside temperature affects the building load. However to simplify the modeling\nof these processes, these two functions have not been coupled.\n\nThe building load is modeled as a Total Load (measured in Tons of refrigeration)\nand a Sensible Heat Fraction. These two parameters define the length and slope\nof the cooling load vector on the psychrometric chart\'s protractor. At\nequilibrium, the same slope is used on the psychrometric chart between the\nsupply air condition and the return air condition. When not at equilibrium, the\nslope between these points represents the cooling rate being supplied. The\ndifference between the cooling load and the cooling rate causes the room air\ncondition to migrate to a new equilibrium point.\n\nOne of the main strengths of this learning tool is to help students visualize\nhow room conditions are affected by changing building loads, and how the\nbuilding operator attempts to maintain design conditions within the space by\nadjusting air flow and temperature.\n\nIn the message line at the bottom of the simulation, the user is flashed brief\nmessages when parameters are out of range. For example, if the room temperature\nor humidity falls above or below reasonable preset limits, a message indicting\nthat the occupants are unhappy is shown. If the user tries to increase the air\nflow above the nominal maximum of 40,000 cfm, they are warned about the noise\ngenerated at high duct velocities. These messages are to remind the novice user\nthat the operation of a building mechanical system is even more complex than\nwhat is represented by this simulation.\n\n\n# Relationships and equations\n\nThe conditions for each state point of air are calculated from equations found\nin Chapter 6 of the 1997 ASHRAE Handbook of Fundamentals, Atlanta, GA. These\nequations relate the dry bulb temperature, wet bulb temperature, dew point\ntemperature, relative humidity, absolute humidity ratio and enthalpy.\n\nThe user defines the dry bulb temperature and wet bulb temperature of the\nOutside Air via the control panel. The user also defines the Supply Air\ntemperature via the control panel, and the relative humidity of the Supply air\nis assumed constant at 90%. The Mixed Air conditions are linearly interpolated\nfrom the user-defined percent of Outside Air and by the conditions of the return\nair and outside air. The return air conditions are allowed to float in response\nto the parameter values selected by the user.\n\nThe conditions at each point (Supply Air, Return Air, Outside Air and Mixed Air)\nare calculated at each time step. The animation of the points is linked to where\nthe air molecule is in the AHU model. The return air and outside air are simply\nproportional movements along the process line between them. The process between\nthe mixed air condition and the supply air (i.e., through the cooling coil) is\nmodeled to follow the profile of an ellipse in the second quadrant. This path\ndemonstrates that mostly sensible cooling occurs in the first half of the coil\nrows, followed by a combination of sensible cooling and dehumidification in the\nlast half of the coil rows. The process between the supply air condition and the\nreturn air (or room air) follows the process line defined by the sensible heat\nratio in the protractor.\n\nA simple energy and mass balance model is used to account for changes in the\ncondition of the room air. Constant sensible and latent capacitance values have\nbeen assumed to make it easy for the user to observe changes but for the system\nto return to equilibrium within a few minutes.\n\nThe cooling load of the building and cooling supply rates are determined using a\ntotal load and Sensible Heat Factor (SHF) concept. The total load (Btu/hr) is\nthe sum of the sensible load and the latent load. The SHF is the ratio of the\nsensible load to the total load. Typical office buildings are represented by an\nSHF = 0.9. The loads are measured in Tons of refrigeration, where one Ton equals\n12,000 Btu/hr. The flow rate of Supply air is measured in cubic feet per minute\n(cfm).\n\n\n\n# Conclusions\n\nA web-based tool to assist in the study of building system operation has been\nintroduced. The simulation allows the student to control various parameters, and\nto visualize the effect those parameter changes have on the operation of the\nsystem. It also allows the student to compare what is happening in the physical\nsystem represented by the building schematic with how the air conditions are\nchanging on the psychrometric chart. Finally, this software package allows the\nstudents to grasp the time-dependent nature of building mechanical systems. By\nacting as the building mechanical manager, they have the opportunity to try to\nmaintain acceptable comfort conditions in the safe (and inexpensive) environment\nof a simulation. Finally, it should be noted that this simulation is for\neducational purposes only, and should never be used as a design tool.\n\n';
-var _mwm126$ahu$Ahu$aboutTab = A2(
-	_evancz$elm_markdown$Markdown$toHtml,
-	{ctor: '[]'},
-	'\nFrom the [Material Design specification](https://material.google.com/components/tabs.html#tabs-usage):\n> Use tabs to organize content at a high level, for example, to present different sections of a newspaper. Don’t use tabs for carousels or pagination of content. Those use cases involve viewing content, not navigating between groups of content.\n>\n> For more detail about using tabs for navigating top-level views, see “Tabs” in Patterns > Navigation.\n>\n> Don\'t use tabs with content that supports the swipe gesture, because swipe gestures are used for navigating between tabs. For example, avoid using tabs in a map where content is pannable, or a list where items can be dismissed with a swipe.\n>\n> Fixed tabs should be used with a limited number of tabs and when consistent placement will aid muscle memory. Scrollable tabs should be used when there are many or a variable number of tabs.\n    ');
+var _mwm126$ahu$Ahu$ahusource = '\n# Source Code\n\nThis simulation is written in [Elm](http://elm-lang.org).\n\nThe source code is available at: [http://github.com/mwm126/ahu](http://github.com/mwm126/ahu)\n';
 var _mwm126$ahu$Ahu$pie_points = F5(
 	function (cx, cy, r, t1, t2) {
 		var sides = 30;
@@ -16536,60 +16670,65 @@ var _mwm126$ahu$Ahu$inlineStyle = _elm_lang$html$Html_Attributes$style(
 	});
 var _mwm126$ahu$Ahu$avg_int = F3(
 	function (r1, r2, t) {
-		return A2(
-			_mwm126$ahu$Ahu$toRadix,
-			16,
-			_elm_lang$core$Basics$round(r1 + ((r2 - r1) * t)));
+		return _elm_lang$core$Basics$round(r1 + ((r2 - r1) * t));
 	});
 var _mwm126$ahu$Ahu$avg_color = F3(
 	function (c1, c2, t) {
-		var b2 = _elm_lang$core$Basics$toFloat(
-			_elm_lang$core$Color$toRgb(c2).blue);
-		var g2 = _elm_lang$core$Basics$toFloat(
-			_elm_lang$core$Color$toRgb(c2).green);
-		var r2 = _elm_lang$core$Basics$toFloat(
-			_elm_lang$core$Color$toRgb(c2).red);
-		var b1 = _elm_lang$core$Basics$toFloat(
-			_elm_lang$core$Color$toRgb(c1).blue);
-		var g1 = _elm_lang$core$Basics$toFloat(
-			_elm_lang$core$Color$toRgb(c1).green);
-		var r1 = _elm_lang$core$Basics$toFloat(
-			_elm_lang$core$Color$toRgb(c1).red);
-		return A2(
-			_elm_lang$core$Basics_ops['++'],
-			'#',
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				A3(_mwm126$ahu$Ahu$avg_int, r1, r2, t),
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					A3(_mwm126$ahu$Ahu$avg_int, g1, g2, t),
-					A3(_mwm126$ahu$Ahu$avg_int, b1, b2, t))));
+		var f = _elm_lang$core$Basics$toFloat;
+		var rgb2 = _elm_lang$core$Color$toRgb(c2);
+		var _p3 = {
+			ctor: '_Tuple3',
+			_0: f(rgb2.red),
+			_1: f(rgb2.green),
+			_2: f(rgb2.blue)
+		};
+		var r2 = _p3._0;
+		var g2 = _p3._1;
+		var b2 = _p3._2;
+		var rgb1 = _elm_lang$core$Color$toRgb(c1);
+		var _p4 = {
+			ctor: '_Tuple3',
+			_0: f(rgb1.red),
+			_1: f(rgb1.green),
+			_2: f(rgb1.blue)
+		};
+		var r1 = _p4._0;
+		var g1 = _p4._1;
+		var b1 = _p4._2;
+		return A3(
+			_elm_lang$core$Color$rgb,
+			A3(_mwm126$ahu$Ahu$avg_int, r1, r2, t),
+			A3(_mwm126$ahu$Ahu$avg_int, g1, g2, t),
+			A3(_mwm126$ahu$Ahu$avg_int, b1, b2, t));
 	});
 var _mwm126$ahu$Ahu$avg = F3(
 	function (xy1, xy2, t) {
-		var _p3 = xy2;
-		var x2 = _p3._0;
-		var y2 = _p3._1;
-		var _p4 = xy1;
-		var x1 = _p4._0;
-		var y1 = _p4._1;
+		var _p5 = xy2;
+		var x2 = _p5._0;
+		var y2 = _p5._1;
+		var _p6 = xy1;
+		var x1 = _p6._0;
+		var y1 = _p6._1;
 		return {ctor: '_Tuple2', _0: x1 + ((x2 - x1) * t), _1: y1 + ((y2 - y1) * t)};
 	});
-var _mwm126$ahu$Ahu$avg_th = F3(
+var _mwm126$ahu$Ahu$avg_thc = F3(
 	function (xy1, xy2, t) {
-		var _p5 = xy2;
-		var t2 = _p5._0;
-		var y2 = _p5._1._0;
+		var _p7 = xy2;
+		var t2 = _p7._0;
+		var y2 = _p7._1._0;
+		var c2 = _p7._2;
 		var x2 = _mwm126$ahu$AhuUnits$inFahrenheit(t2);
-		var _p6 = xy1;
-		var t1 = _p6._0;
-		var y1 = _p6._1._0;
+		var _p8 = xy1;
+		var t1 = _p8._0;
+		var y1 = _p8._1._0;
+		var c1 = _p8._2;
 		var x1 = _mwm126$ahu$AhuUnits$inFahrenheit(t1);
+		var clr = A3(_mwm126$ahu$Ahu$avg_color, c1, c2, t);
 		return {
-			ctor: '_Tuple2',
+			ctor: '_Tuple3',
 			_0: _mwm126$ahu$AhuUnits$Fahrenheit(x1 + ((x2 - x1) * t)),
-			_1: _mwm126$ahu$AhuUnits$MolecularRatio(y1 + ((y2 - y1) * t))
+			_1: _mwm126$ahu$AhuUnits$MolecularRatio(y1 + ((y2 - y1) * t)),
+			_2: clr
 		};
 	});
 var _mwm126$ahu$Ahu$wetbulb_to_specifichumidity = function (temperature) {
@@ -16597,53 +16736,87 @@ var _mwm126$ahu$Ahu$wetbulb_to_specifichumidity = function (temperature) {
 	var wb = ((2.5e-2 * (t - 65)) / (85 - 65)) + 7.0e-3;
 	return _mwm126$ahu$AhuUnits$MolecularRatio(wb);
 };
-var _mwm126$ahu$Ahu$outside_th = function (model) {
+var _mwm126$ahu$Ahu$outside_thc = function (model) {
 	return {
-		ctor: '_Tuple2',
+		ctor: '_Tuple3',
 		_0: model.outside_air_t,
-		_1: _mwm126$ahu$Ahu$wetbulb_to_specifichumidity(model.outside_air_wb)
+		_1: _mwm126$ahu$Ahu$wetbulb_to_specifichumidity(model.outside_air_wb),
+		_2: _elm_lang$core$Color$red
 	};
 };
-var _mwm126$ahu$Ahu$sa_th = function (model) {
+var _mwm126$ahu$Ahu$sa_thc = function (model) {
 	return {
-		ctor: '_Tuple2',
+		ctor: '_Tuple3',
 		_0: model.supply_air.t,
-		_1: _mwm126$ahu$AhuModel$humidity_ratio(model.supply_air)
+		_1: _mwm126$ahu$AhuModel$humidity_ratio(model.supply_air),
+		_2: _elm_lang$core$Color$blue
 	};
 };
-var _mwm126$ahu$Ahu$building_th = function (model) {
+var _mwm126$ahu$Ahu$building_thc = function (model) {
 	return {
-		ctor: '_Tuple2',
+		ctor: '_Tuple3',
 		_0: model.building_air.t,
-		_1: _mwm126$ahu$AhuModel$humidity_ratio(model.building_air)
+		_1: _mwm126$ahu$AhuModel$humidity_ratio(model.building_air),
+		_2: _elm_lang$core$Color$green
 	};
 };
-var _mwm126$ahu$Ahu$mixed_th = function (model) {
-	return A3(
-		_mwm126$ahu$Ahu$avg_th,
-		_mwm126$ahu$Ahu$building_th(model),
-		_mwm126$ahu$Ahu$outside_th(model),
+var _mwm126$ahu$Ahu$mixed_thc = function (model) {
+	var _p9 = A3(
+		_mwm126$ahu$Ahu$avg_thc,
+		_mwm126$ahu$Ahu$building_thc(model),
+		_mwm126$ahu$Ahu$outside_thc(model),
 		model.oa_p / 100);
+	var t = _p9._0;
+	var h = _p9._1;
+	var c = _p9._2;
+	return {ctor: '_Tuple3', _0: t, _1: h, _2: _elm_lang$core$Color$yellow};
 };
-var _mwm126$ahu$Ahu$th_to_xy = function (_p7) {
-	var _p8 = _p7;
-	var _p9 = _p8._1;
-	var h = _p9._0;
-	var t = _mwm126$ahu$AhuUnits$inFahrenheit(_p8._0);
+var _mwm126$ahu$Ahu$asString = function (clr) {
+	var hex = _mwm126$ahu$Ahu$toRadix(16);
+	var t = _elm_lang$core$Color$toRgb(clr);
+	var r = A3(
+		_elm_lang$core$String$padLeft,
+		2,
+		_elm_lang$core$Native_Utils.chr('0'),
+		hex(t.red));
+	var b = A3(
+		_elm_lang$core$String$padLeft,
+		2,
+		_elm_lang$core$Native_Utils.chr('0'),
+		hex(t.blue));
+	var g = A3(
+		_elm_lang$core$String$padLeft,
+		2,
+		_elm_lang$core$Native_Utils.chr('0'),
+		hex(t.green));
+	return A2(
+		_elm_lang$core$Basics_ops['++'],
+		'#',
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			r,
+			A2(_elm_lang$core$Basics_ops['++'], g, b)));
+};
+var _mwm126$ahu$Ahu$th_to_xy = function (_p10) {
+	var _p11 = _p10;
+	var _p12 = _p11._1;
+	var h = _p12._0;
+	var t = _mwm126$ahu$AhuUnits$inFahrenheit(_p11._0);
 	var bottom = 350;
 	var x = (((t - 40) * (_elm_lang$core$Basics$toFloat(bottom) - 100)) / (95 - 40)) + 100;
 	var y = (((2.9e-2 - h) * (_elm_lang$core$Basics$toFloat(bottom) - 100)) / (2.9e-2 - 5.2e-3)) + 100;
 	return {ctor: '_Tuple2', _0: x, _1: y};
 };
-var _mwm126$ahu$Ahu$air_state = F5(
-	function (th, clr, label, d_x, d_y) {
-		var _p10 = th;
-		var t = _p10._0;
-		var h = _p10._1;
-		var _p11 = _mwm126$ahu$Ahu$th_to_xy(
+var _mwm126$ahu$Ahu$air_state = F4(
+	function (thc, label, d_x, d_y) {
+		var _p13 = thc;
+		var t = _p13._0;
+		var h = _p13._1;
+		var clr = _p13._2;
+		var _p14 = _mwm126$ahu$Ahu$th_to_xy(
 			{ctor: '_Tuple2', _0: t, _1: h});
-		var x_1 = _p11._0;
-		var y_1 = _p11._1;
+		var x_1 = _p14._0;
+		var y_1 = _p14._1;
 		return {
 			ctor: '::',
 			_0: A2(
@@ -16661,7 +16834,8 @@ var _mwm126$ahu$Ahu$air_state = F5(
 							_0: _elm_lang$svg$Svg_Attributes$r('4'),
 							_1: {
 								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$fill(clr),
+								_0: _elm_lang$svg$Svg_Attributes$fill(
+									_mwm126$ahu$Ahu$asString(clr)),
 								_1: {ctor: '[]'}
 							}
 						}
@@ -16756,7 +16930,7 @@ var _mwm126$ahu$Ahu$protractor = F3(
 					},
 					{
 						ctor: '::',
-						_0: _elm_lang$html$Html$text('Cooling Vectors (BTU/Hr)'),
+						_0: _elm_lang$html$Html$text('Cooling Vectors'),
 						_1: {ctor: '[]'}
 					}),
 				_1: {
@@ -17004,124 +17178,504 @@ var _mwm126$ahu$Ahu$house_x = _mwm126$ahu$AhuUnits$Fahrenheit(10);
 var _mwm126$ahu$Ahu$air_radius = 10;
 var _mwm126$ahu$Ahu$duct_height = 3 * _mwm126$ahu$Ahu$air_radius;
 var _mwm126$ahu$Ahu$duct_width = 8 * _mwm126$ahu$Ahu$air_radius;
+var _mwm126$ahu$Ahu$comfort_hr_min = _mwm126$ahu$AhuUnits$MolecularRatio(5.5e-3);
+var _mwm126$ahu$Ahu$comfort_hr_max = _mwm126$ahu$AhuUnits$MolecularRatio(1.1e-2);
+var _mwm126$ahu$Ahu$comfort_rh_min = _mwm126$ahu$AhuUnits$HPercent(30);
+var _mwm126$ahu$Ahu$comfort_rh_max = _mwm126$ahu$AhuUnits$HPercent(60);
+var _mwm126$ahu$Ahu$comfort_temp_min = _mwm126$ahu$AhuUnits$Fahrenheit(69);
+var _mwm126$ahu$Ahu$comfort_temp_max = _mwm126$ahu$AhuUnits$Fahrenheit(81);
+var _mwm126$ahu$Ahu$building_comment = function (model) {
+	var temp_min = _mwm126$ahu$AhuUnits$inFahrenheit(_mwm126$ahu$Ahu$comfort_temp_min);
+	var temp_max = _mwm126$ahu$AhuUnits$inFahrenheit(_mwm126$ahu$Ahu$comfort_temp_max);
+	var _p15 = _mwm126$ahu$Ahu$comfort_hr_min;
+	var hr_min = _p15._0;
+	var _p16 = _mwm126$ahu$Ahu$comfort_hr_max;
+	var hr_max = _p16._0;
+	var building_t = _mwm126$ahu$AhuUnits$inFahrenheit(model.building_air.t);
+	var _p17 = _mwm126$ahu$AhuModel$humidity_ratio(model.building_air);
+	var building_hr = _p17._0;
+	return (_elm_lang$core$Native_Utils.cmp(building_hr, hr_max) > 0) ? 'Ugh!  It\'s too humid.' : ((_elm_lang$core$Native_Utils.cmp(building_hr, hr_min) < 0) ? 'It\'s too dry. ' : ((_elm_lang$core$Native_Utils.cmp(building_t, temp_max) > 0) ? 'Whew!  It\'s too hot in here! ' : ((_elm_lang$core$Native_Utils.cmp(building_t, temp_min) < 0) ? 'Brrr!  It\'s too cold in here! ' : '')));
+};
+var _mwm126$ahu$Ahu$airflow_range = function (model) {
+	return {
+		ctor: '_Tuple2',
+		_0: A2(
+			_mwm126$ahu$AhuUnits$inUnitsAirflow,
+			model.system,
+			_mwm126$ahu$AhuUnits$CubicFeetPerMinute(20000.0)),
+		_1: A2(
+			_mwm126$ahu$AhuUnits$inUnitsAirflow,
+			model.system,
+			_mwm126$ahu$AhuUnits$CubicFeetPerMinute(50000.0))
+	};
+};
+var _mwm126$ahu$Ahu$load_range = function (model) {
+	return {
+		ctor: '_Tuple2',
+		_0: A2(
+			_mwm126$ahu$AhuUnits$inUnitsPower,
+			model.system,
+			_mwm126$ahu$AhuUnits$Tons(20.0)),
+		_1: A2(
+			_mwm126$ahu$AhuUnits$inUnitsPower,
+			model.system,
+			_mwm126$ahu$AhuUnits$Tons(100.0))
+	};
+};
+var _mwm126$ahu$Ahu$sa_t_range = function (model) {
+	return {
+		ctor: '_Tuple2',
+		_0: A2(
+			_mwm126$ahu$AhuUnits$inUnits,
+			model.system,
+			_mwm126$ahu$AhuUnits$Fahrenheit(45.0)),
+		_1: A2(
+			_mwm126$ahu$AhuUnits$inUnits,
+			model.system,
+			_mwm126$ahu$AhuUnits$Fahrenheit(60.0))
+	};
+};
+var _mwm126$ahu$Ahu$oawb_range = function (model) {
+	return {
+		ctor: '_Tuple2',
+		_0: A2(
+			_mwm126$ahu$AhuUnits$inUnits,
+			model.system,
+			_mwm126$ahu$AhuUnits$Fahrenheit(65.0)),
+		_1: A2(
+			_mwm126$ahu$AhuUnits$inUnits,
+			model.system,
+			_mwm126$ahu$AhuUnits$Fahrenheit(85.0))
+	};
+};
+var _mwm126$ahu$Ahu$oa_t_range = function (model) {
+	return {
+		ctor: '_Tuple2',
+		_0: A2(
+			_mwm126$ahu$AhuUnits$inUnits,
+			model.system,
+			_mwm126$ahu$AhuUnits$Fahrenheit(80.0)),
+		_1: A2(
+			_mwm126$ahu$AhuUnits$inUnits,
+			model.system,
+			_mwm126$ahu$AhuUnits$Fahrenheit(94.0))
+	};
+};
+var _mwm126$ahu$Ahu$show_style = _elm_lang$html$Html_Attributes$style(
+	{
+		ctor: '::',
+		_0: {ctor: '_Tuple2', _0: 'float', _1: 'right'},
+		_1: {
+			ctor: '::',
+			_0: {ctor: '_Tuple2', _0: 'width', _1: '50%'},
+			_1: {
+				ctor: '::',
+				_0: {ctor: '_Tuple2', _0: 'display', _1: 'inline-block'},
+				_1: {ctor: '[]'}
+			}
+		}
+	});
+var _mwm126$ahu$Ahu$ctrl_style = _elm_lang$html$Html_Attributes$style(
+	{
+		ctor: '::',
+		_0: {ctor: '_Tuple2', _0: 'float', _1: 'left'},
+		_1: {
+			ctor: '::',
+			_0: {ctor: '_Tuple2', _0: 'width', _1: '65%'},
+			_1: {
+				ctor: '::',
+				_0: {ctor: '_Tuple2', _0: 'display', _1: 'inline-block'},
+				_1: {ctor: '[]'}
+			}
+		}
+	});
+var _mwm126$ahu$Ahu$stringToFloat = function (s) {
+	var _p18 = _elm_lang$core$String$toFloat(s);
+	if (_p18.ctor === 'Ok') {
+		return _p18._0;
+	} else {
+		return 0.0;
+	}
+};
+var _mwm126$ahu$Ahu$toTemp = F2(
+	function (model, s) {
+		var d = function () {
+			var _p19 = _elm_lang$core$String$toFloat(s);
+			if (_p19.ctor === 'Ok') {
+				return _p19._0;
+			} else {
+				return 0.0;
+			}
+		}();
+		var _p20 = model.system;
+		if (_p20.ctor === 'Metric') {
+			return _mwm126$ahu$AhuUnits$Celsius(d);
+		} else {
+			return _mwm126$ahu$AhuUnits$Fahrenheit(d);
+		}
+	});
+var _mwm126$ahu$Ahu$toAirflow = F2(
+	function (model, s) {
+		var d = function () {
+			var _p21 = _elm_lang$core$String$toFloat(s);
+			if (_p21.ctor === 'Ok') {
+				return _p21._0;
+			} else {
+				return 0.0;
+			}
+		}();
+		var _p22 = model.system;
+		if (_p22.ctor === 'Metric') {
+			return _mwm126$ahu$AhuUnits$CubicMetersPerSecond(d);
+		} else {
+			return _mwm126$ahu$AhuUnits$CubicFeetPerMinute(d);
+		}
+	});
+var _mwm126$ahu$Ahu$toLoad = F2(
+	function (model, s) {
+		var d = function () {
+			var _p23 = _elm_lang$core$String$toFloat(s);
+			if (_p23.ctor === 'Ok') {
+				return _p23._0;
+			} else {
+				return 0.0;
+			}
+		}();
+		var _p24 = model.system;
+		if (_p24.ctor === 'Metric') {
+			return _mwm126$ahu$AhuUnits$Kilowatts(d);
+		} else {
+			return _mwm126$ahu$AhuUnits$Tons(d);
+		}
+	});
+var _mwm126$ahu$Ahu$roundn = F2(
+	function (n, x) {
+		var f = _elm_lang$core$Basics$toFloat(
+			Math.pow(10, n));
+		var scaled = f * x;
+		var fh = _elm_lang$core$Basics$toFloat(
+			_elm_lang$core$Basics$round(scaled));
+		return fh / f;
+	});
+var _mwm126$ahu$Ahu$control = F5(
+	function (model, set, range, get, label) {
+		var val = function (_p25) {
+			return _elm_lang$core$Basics$toString(
+				A2(
+					_mwm126$ahu$Ahu$roundn,
+					2,
+					get(_p25)));
+		}(model);
+		var _p26 = range;
+		var minval = _p26._0;
+		var maxval = _p26._1;
+		return A2(
+			_elm_lang$html$Html$div,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$input,
+					{
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$type_('range'),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$min(
+								_elm_lang$core$Basics$toString(minval)),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$max(
+									_elm_lang$core$Basics$toString(maxval)),
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$value(val),
+									_1: {
+										ctor: '::',
+										_0: _elm_lang$html$Html_Events$onInput(set),
+										_1: {ctor: '[]'}
+									}
+								}
+							}
+						}
+					},
+					{ctor: '[]'}),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$html$Html$text(label),
+					_1: {ctor: '[]'}
+				}
+			});
+	});
+var _mwm126$ahu$Ahu$get_load = function (model) {
+	return A2(_mwm126$ahu$AhuUnits$inUnitsPower, model.system, model.load);
+};
+var _mwm126$ahu$Ahu$get_airflow = function (model) {
+	return A2(_mwm126$ahu$AhuUnits$inUnitsAirflow, model.system, model.airflow);
+};
+var _mwm126$ahu$Ahu$get_sa_t = function (model) {
+	return A2(_mwm126$ahu$AhuUnits$inUnits, model.system, model.supply_air.t);
+};
+var _mwm126$ahu$Ahu$get_oa_wb = function (model) {
+	return A2(_mwm126$ahu$AhuUnits$inUnits, model.system, model.outside_air_wb);
+};
+var _mwm126$ahu$Ahu$get_oa_t = function (model) {
+	return A2(_mwm126$ahu$AhuUnits$inUnits, model.system, model.outside_air_t);
+};
+var _mwm126$ahu$Ahu$cycle = 10;
+var _mwm126$ahu$Ahu$time_mod = F2(
+	function (time, model) {
+		var ct = _mwm126$ahu$Ahu$cycle;
+		var t = _elm_lang$core$Time$inSeconds(time);
+		return (t - (ct * _elm_lang$core$Basics$toFloat(
+			_elm_lang$core$Basics$floor(t / ct)))) / ct;
+	});
+var _mwm126$ahu$Ahu$init = {ctor: '_Tuple2', _0: _mwm126$ahu$AhuModel$init_model, _1: _elm_lang$core$Platform_Cmd$none};
+var _mwm126$ahu$Ahu$Sprites = F6(
+	function (a, b, c, d, e, f) {
+		return {recirc_thc: a, oa_thc: b, air_location: c, recirc_air_location: d, air_color: e, recirc_air_color: f};
+	});
+var _mwm126$ahu$Ahu$Mdl = function (a) {
+	return {ctor: 'Mdl', _0: a};
+};
+var _mwm126$ahu$Ahu$update = F2(
+	function (msg, model) {
+		var new_model = function () {
+			var _p27 = msg;
+			switch (_p27.ctor) {
+				case 'SetOap':
+					return _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							oa_p: _mwm126$ahu$Ahu$stringToFloat(_p27._0)
+						});
+				case 'SetAirflow':
+					return _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							airflow: A2(_mwm126$ahu$Ahu$toAirflow, model, _p27._0)
+						});
+				case 'SetShf':
+					return _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							load_shf: _mwm126$ahu$Ahu$stringToFloat(_p27._0) / 100
+						});
+				case 'SetTons':
+					return _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							load: A2(_mwm126$ahu$Ahu$toLoad, model, _p27._0)
+						});
+				case 'SetOawb':
+					return _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							outside_air_wb: A2(_mwm126$ahu$Ahu$toTemp, model, _p27._0)
+						});
+				case 'SetSat':
+					return _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							supply_air: {
+								t: A2(_mwm126$ahu$Ahu$toTemp, model, _p27._0),
+								rh: model.supply_air.rh
+							}
+						});
+				case 'SetOat':
+					return _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							outside_air_t: A2(_mwm126$ahu$Ahu$toTemp, model, _p27._0)
+						});
+				case 'ToggleUnits':
+					return _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							system: _elm_lang$core$Native_Utils.eq(model.system, _mwm126$ahu$AhuUnits$Metric) ? _mwm126$ahu$AhuUnits$Imperial : _mwm126$ahu$AhuUnits$Metric
+						});
+				case 'Tick':
+					return _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							time: A2(_mwm126$ahu$Ahu$time_mod, _p27._0, model),
+							building_air: _mwm126$ahu$AhuModel$new_building_air(model)
+						});
+				case 'SelectTab':
+					return _elm_lang$core$Native_Utils.update(
+						model,
+						{tab: _p27._0});
+				default:
+					return _elm_lang$core$Tuple$first(
+						A3(_debois$elm_mdl$Material$update, _mwm126$ahu$Ahu$Mdl, _p27._0, model));
+			}
+		}();
+		return {ctor: '_Tuple2', _0: new_model, _1: _elm_lang$core$Platform_Cmd$none};
+	});
+var _mwm126$ahu$Ahu$ToggleUnits = {ctor: 'ToggleUnits'};
+var _mwm126$ahu$Ahu$SelectTab = function (a) {
+	return {ctor: 'SelectTab', _0: a};
+};
+var _mwm126$ahu$Ahu$Tick = function (a) {
+	return {ctor: 'Tick', _0: a};
+};
+var _mwm126$ahu$Ahu$subscriptions = function (model) {
+	return A2(_elm_lang$core$Time$every, 0.1 * _elm_lang$core$Time$second, _mwm126$ahu$Ahu$Tick);
+};
+var _mwm126$ahu$Ahu$SetTons = function (a) {
+	return {ctor: 'SetTons', _0: a};
+};
+var _mwm126$ahu$Ahu$SetShf = function (a) {
+	return {ctor: 'SetShf', _0: a};
+};
+var _mwm126$ahu$Ahu$SetSat = function (a) {
+	return {ctor: 'SetSat', _0: a};
+};
+var _mwm126$ahu$Ahu$SetOawb = function (a) {
+	return {ctor: 'SetOawb', _0: a};
+};
+var _mwm126$ahu$Ahu$SetOat = function (a) {
+	return {ctor: 'SetOat', _0: a};
+};
+var _mwm126$ahu$Ahu$SetOap = function (a) {
+	return {ctor: 'SetOap', _0: a};
+};
+var _mwm126$ahu$Ahu$SetAirflow = function (a) {
+	return {ctor: 'SetAirflow', _0: a};
+};
+var _mwm126$ahu$Ahu$MixingIntake = function (a) {
+	return {ctor: 'MixingIntake', _0: a};
+};
+var _mwm126$ahu$Ahu$ExitingBuilding = function (a) {
+	return {ctor: 'ExitingBuilding', _0: a};
+};
+var _mwm126$ahu$Ahu$EnteringCooling = function (a) {
+	return {ctor: 'EnteringCooling', _0: a};
+};
+var _mwm126$ahu$Ahu$EnteringBuilding = function (a) {
+	return {ctor: 'EnteringBuilding', _0: a};
+};
+var _mwm126$ahu$Ahu$find_stage = function (model) {
+	var t = model.time;
+	return (_elm_lang$core$Native_Utils.cmp(model.time, 0.25) < 0) ? _mwm126$ahu$Ahu$ExitingBuilding(model.time / 0.25) : ((_elm_lang$core$Native_Utils.cmp(model.time, 0.5) < 0) ? _mwm126$ahu$Ahu$MixingIntake((model.time - 0.25) / 0.25) : ((_elm_lang$core$Native_Utils.cmp(model.time, 0.75) < 0) ? _mwm126$ahu$Ahu$EnteringCooling((model.time - 0.5) / 0.25) : _mwm126$ahu$Ahu$EnteringBuilding((model.time - 0.75) / 0.25)));
+};
 var _mwm126$ahu$Ahu$sprite_states = function (model) {
+	var stage = _mwm126$ahu$Ahu$find_stage(model);
 	var yy = _mwm126$ahu$Ahu$house_y;
 	var xx = _mwm126$ahu$AhuUnits$inFahrenheit(_mwm126$ahu$Ahu$house_x);
-	if (_elm_lang$core$Native_Utils.cmp(model.time, 0.25) < 0) {
-		var pp = model.time / 0.25;
-		return {
-			recirc_th: _mwm126$ahu$Ahu$building_th(model),
-			oa_th: _mwm126$ahu$Ahu$building_th(model),
-			air_location: A3(
-				_mwm126$ahu$Ahu$avg,
-				{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy},
-				{ctor: '_Tuple2', _0: xx, _1: yy},
-				pp),
-			recirc_air_location: A3(
-				_mwm126$ahu$Ahu$avg,
-				{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy},
-				{ctor: '_Tuple2', _0: xx + (_mwm126$ahu$Ahu$duct_width * 0.3), _1: yy},
-				pp),
-			air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$green, pp),
-			recirc_air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$green, pp)
-		};
-	} else {
-		if (_elm_lang$core$Native_Utils.cmp(model.time, 0.5) < 0) {
-			var pp = (model.time - 0.25) / 0.25;
+	var _p28 = stage;
+	switch (_p28.ctor) {
+		case 'ExitingBuilding':
+			var _p29 = _p28._0;
 			return {
-				recirc_th: A3(
-					_mwm126$ahu$Ahu$avg_th,
-					_mwm126$ahu$Ahu$building_th(model),
-					_mwm126$ahu$Ahu$mixed_th(model),
-					pp),
-				oa_th: A3(
-					_mwm126$ahu$Ahu$avg_th,
-					_mwm126$ahu$Ahu$outside_th(model),
-					_mwm126$ahu$Ahu$mixed_th(model),
-					pp),
+				recirc_thc: _mwm126$ahu$Ahu$building_thc(model),
+				oa_thc: _mwm126$ahu$Ahu$building_thc(model),
+				air_location: A3(
+					_mwm126$ahu$Ahu$avg,
+					{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy},
+					{ctor: '_Tuple2', _0: xx, _1: yy},
+					_p29),
+				recirc_air_location: A3(
+					_mwm126$ahu$Ahu$avg,
+					{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy},
+					{ctor: '_Tuple2', _0: xx + (_mwm126$ahu$Ahu$duct_width * 0.3), _1: yy},
+					_p29),
+				air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$green, _p29),
+				recirc_air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$green, _p29)
+			};
+		case 'MixingIntake':
+			var _p30 = _p28._0;
+			return {
+				recirc_thc: A3(
+					_mwm126$ahu$Ahu$avg_thc,
+					_mwm126$ahu$Ahu$building_thc(model),
+					_mwm126$ahu$Ahu$mixed_thc(model),
+					_p30),
+				oa_thc: A3(
+					_mwm126$ahu$Ahu$avg_thc,
+					_mwm126$ahu$Ahu$outside_thc(model),
+					_mwm126$ahu$Ahu$mixed_thc(model),
+					_p30),
 				air_location: A3(
 					_mwm126$ahu$Ahu$avg,
 					{ctor: '_Tuple2', _0: xx, _1: yy},
 					{ctor: '_Tuple2', _0: xx, _1: yy + _mwm126$ahu$Ahu$duct_height},
-					pp),
+					_p30),
 				recirc_air_location: A3(
 					_mwm126$ahu$Ahu$avg,
 					{ctor: '_Tuple2', _0: xx + (_mwm126$ahu$Ahu$duct_width * 0.3), _1: yy},
 					{ctor: '_Tuple2', _0: xx + (_mwm126$ahu$Ahu$duct_width * 0.3), _1: yy + _mwm126$ahu$Ahu$duct_height},
-					pp),
-				air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$red, pp),
-				recirc_air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$green, pp)
+					_p30),
+				air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$red, _p30),
+				recirc_air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$green, _p30)
 			};
-		} else {
-			if (_elm_lang$core$Native_Utils.cmp(model.time, 0.75) < 0) {
-				var pp = (model.time - 0.5) / 0.25;
-				return {
-					recirc_th: A3(
-						_mwm126$ahu$Ahu$avg_th,
-						_mwm126$ahu$Ahu$mixed_th(model),
-						_mwm126$ahu$Ahu$sa_th(model),
-						pp),
-					oa_th: A3(
-						_mwm126$ahu$Ahu$avg_th,
-						_mwm126$ahu$Ahu$mixed_th(model),
-						_mwm126$ahu$Ahu$sa_th(model),
-						pp),
-					air_location: A3(
-						_mwm126$ahu$Ahu$avg,
-						{ctor: '_Tuple2', _0: xx, _1: yy + _mwm126$ahu$Ahu$duct_height},
-						{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy + _mwm126$ahu$Ahu$duct_height},
-						pp),
-					recirc_air_location: A3(
-						_mwm126$ahu$Ahu$avg,
-						{ctor: '_Tuple2', _0: xx + (_mwm126$ahu$Ahu$duct_width * 0.3), _1: yy + _mwm126$ahu$Ahu$duct_height},
-						{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy + _mwm126$ahu$Ahu$duct_height},
-						pp),
-					air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$yellow, _elm_lang$core$Color$blue, pp),
-					recirc_air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$green, pp)
-				};
-			} else {
-				var pp = (model.time - 0.75) / 0.25;
-				return {
-					recirc_th: A3(
-						_mwm126$ahu$Ahu$avg_th,
-						_mwm126$ahu$Ahu$sa_th(model),
-						_mwm126$ahu$Ahu$building_th(model),
-						pp),
-					oa_th: A3(
-						_mwm126$ahu$Ahu$avg_th,
-						_mwm126$ahu$Ahu$sa_th(model),
-						_mwm126$ahu$Ahu$building_th(model),
-						pp),
-					air_location: A3(
-						_mwm126$ahu$Ahu$avg,
-						{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy + _mwm126$ahu$Ahu$duct_height},
-						{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy},
-						pp),
-					recirc_air_location: A3(
-						_mwm126$ahu$Ahu$avg,
-						{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy + _mwm126$ahu$Ahu$duct_height},
-						{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy},
-						pp),
-					air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$blue, _elm_lang$core$Color$green, pp),
-					recirc_air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$blue, _elm_lang$core$Color$green, pp)
-				};
-			}
-		}
+		case 'EnteringCooling':
+			var _p31 = _p28._0;
+			return {
+				recirc_thc: A3(
+					_mwm126$ahu$Ahu$avg_thc,
+					_mwm126$ahu$Ahu$mixed_thc(model),
+					_mwm126$ahu$Ahu$sa_thc(model),
+					_p31),
+				oa_thc: A3(
+					_mwm126$ahu$Ahu$avg_thc,
+					_mwm126$ahu$Ahu$mixed_thc(model),
+					_mwm126$ahu$Ahu$sa_thc(model),
+					_p31),
+				air_location: A3(
+					_mwm126$ahu$Ahu$avg,
+					{ctor: '_Tuple2', _0: xx, _1: yy + _mwm126$ahu$Ahu$duct_height},
+					{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy + _mwm126$ahu$Ahu$duct_height},
+					_p31),
+				recirc_air_location: A3(
+					_mwm126$ahu$Ahu$avg,
+					{ctor: '_Tuple2', _0: xx + (_mwm126$ahu$Ahu$duct_width * 0.3), _1: yy + _mwm126$ahu$Ahu$duct_height},
+					{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy + _mwm126$ahu$Ahu$duct_height},
+					_p31),
+				air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$yellow, _elm_lang$core$Color$blue, _p31),
+				recirc_air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$green, _p31)
+			};
+		default:
+			var _p32 = _p28._0;
+			return {
+				recirc_thc: A3(
+					_mwm126$ahu$Ahu$avg_thc,
+					_mwm126$ahu$Ahu$sa_thc(model),
+					_mwm126$ahu$Ahu$building_thc(model),
+					_p32),
+				oa_thc: A3(
+					_mwm126$ahu$Ahu$avg_thc,
+					_mwm126$ahu$Ahu$sa_thc(model),
+					_mwm126$ahu$Ahu$building_thc(model),
+					_p32),
+				air_location: A3(
+					_mwm126$ahu$Ahu$avg,
+					{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy + _mwm126$ahu$Ahu$duct_height},
+					{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy},
+					_p32),
+				recirc_air_location: A3(
+					_mwm126$ahu$Ahu$avg,
+					{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy + _mwm126$ahu$Ahu$duct_height},
+					{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy},
+					_p32),
+				air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$blue, _elm_lang$core$Color$green, _p32),
+				recirc_air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$blue, _elm_lang$core$Color$green, _p32)
+			};
 	}
 };
 var _mwm126$ahu$Ahu$house = function (model) {
-	var _p12 = function (_) {
+	var _p33 = function (_) {
 		return _.recirc_air_location;
 	}(
 		_mwm126$ahu$Ahu$sprite_states(model));
-	var rx = _p12._0;
-	var ry = _p12._1;
-	var _p13 = function (_) {
+	var rx = _p33._0;
+	var ry = _p33._1;
+	var _p34 = function (_) {
 		return _.air_location;
 	}(
 		_mwm126$ahu$Ahu$sprite_states(model));
-	var ax = _p13._0;
-	var ay = _p13._1;
+	var ax = _p34._0;
+	var ay = _p34._1;
 	var yy = _mwm126$ahu$Ahu$house_y;
 	var xx = _mwm126$ahu$AhuUnits$inFahrenheit(_mwm126$ahu$Ahu$house_x);
 	var ww = _mwm126$ahu$Ahu$duct_width;
@@ -17431,7 +17985,8 @@ var _mwm126$ahu$Ahu$house = function (model) {
 														10,
 														(1 - (model.oa_p / 100)) - 0.25,
 														0.75,
-														_mwm126$ahu$Ahu$sprite_states(model).recirc_air_color),
+														_elm_lang$core$Basics$toString(
+															_mwm126$ahu$Ahu$sprite_states(model).recirc_air_color)),
 													_1: {
 														ctor: '::',
 														_0: A6(
@@ -17441,7 +17996,8 @@ var _mwm126$ahu$Ahu$house = function (model) {
 															10,
 															-0.25,
 															(1.0 - (model.oa_p / 100)) - 0.25,
-															_mwm126$ahu$Ahu$sprite_states(model).air_color),
+															_elm_lang$core$Basics$toString(
+																_mwm126$ahu$Ahu$sprite_states(model).air_color)),
 														_1: {ctor: '[]'}
 													}
 												}
@@ -17457,12 +18013,6 @@ var _mwm126$ahu$Ahu$house = function (model) {
 		}
 	};
 };
-var _mwm126$ahu$Ahu$comfort_hr_min = _mwm126$ahu$AhuUnits$MolecularRatio(5.5e-3);
-var _mwm126$ahu$Ahu$comfort_hr_max = _mwm126$ahu$AhuUnits$MolecularRatio(1.1e-2);
-var _mwm126$ahu$Ahu$comfort_rh_min = _mwm126$ahu$AhuUnits$HPercent(30);
-var _mwm126$ahu$Ahu$comfort_rh_max = _mwm126$ahu$AhuUnits$HPercent(60);
-var _mwm126$ahu$Ahu$comfort_temp_min = _mwm126$ahu$AhuUnits$Fahrenheit(69);
-var _mwm126$ahu$Ahu$comfort_temp_max = _mwm126$ahu$AhuUnits$Fahrenheit(81);
 var _mwm126$ahu$Ahu$psych_chart = function (model) {
 	var comfort_label = A2(
 		_elm_lang$svg$Svg$text_,
@@ -17471,7 +18021,7 @@ var _mwm126$ahu$Ahu$psych_chart = function (model) {
 			_0: _elm_lang$svg$Svg_Attributes$x('270'),
 			_1: {
 				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$y('350'),
+				_0: _elm_lang$svg$Svg_Attributes$y('347'),
 				_1: {
 					ctor: '::',
 					_0: _elm_lang$svg$Svg_Attributes$fontSize('10'),
@@ -17509,7 +18059,7 @@ var _mwm126$ahu$Ahu$psych_chart = function (model) {
 		},
 		{
 			ctor: '::',
-			_0: _elm_lang$html$Html$text('Specific Humidity'),
+			_0: _elm_lang$html$Html$text('Humidity Ratio'),
 			_1: {ctor: '[]'}
 		});
 	var x_axis_label = A2(
@@ -17563,27 +18113,27 @@ var _mwm126$ahu$Ahu$psych_chart = function (model) {
 	var some_temperature = 50;
 	var r = 'blue';
 	var make_line = F3(
-		function (c, _p15, _p14) {
-			var _p16 = _p15;
-			var _p17 = _p14;
+		function (c, _p36, _p35) {
+			var _p37 = _p36;
+			var _p38 = _p35;
 			return A2(
 				_elm_lang$svg$Svg$line,
 				{
 					ctor: '::',
 					_0: _elm_lang$svg$Svg_Attributes$x1(
-						_elm_lang$core$Basics$toString(_p16._0)),
+						_elm_lang$core$Basics$toString(_p37._0)),
 					_1: {
 						ctor: '::',
 						_0: _elm_lang$svg$Svg_Attributes$y1(
-							_elm_lang$core$Basics$toString(_p16._1)),
+							_elm_lang$core$Basics$toString(_p37._1)),
 						_1: {
 							ctor: '::',
 							_0: _elm_lang$svg$Svg_Attributes$x2(
-								_elm_lang$core$Basics$toString(_p17._0)),
+								_elm_lang$core$Basics$toString(_p38._0)),
 							_1: {
 								ctor: '::',
 								_0: _elm_lang$svg$Svg_Attributes$y2(
-									_elm_lang$core$Basics$toString(_p17._1)),
+									_elm_lang$core$Basics$toString(_p38._1)),
 								_1: {
 									ctor: '::',
 									_0: _elm_lang$svg$Svg_Attributes$stroke(c),
@@ -17595,23 +18145,23 @@ var _mwm126$ahu$Ahu$psych_chart = function (model) {
 				},
 				{ctor: '[]'});
 		});
-	var p_horiz = function (_p18) {
-		var _p19 = _p18;
-		var _p20 = _p19._1;
+	var p_horiz = function (_p39) {
+		var _p40 = _p39;
+		var _p41 = _p40._1;
 		return A3(
 			make_line,
 			'lightgray',
-			{ctor: '_Tuple2', _0: _p19._0, _1: _p20},
-			{ctor: '_Tuple2', _0: 450, _1: _p20});
+			{ctor: '_Tuple2', _0: _p40._0, _1: _p41},
+			{ctor: '_Tuple2', _0: 450, _1: _p41});
 	};
-	var p_vert = function (_p21) {
-		var _p22 = _p21;
-		var _p23 = _p22._0;
+	var p_vert = function (_p42) {
+		var _p43 = _p42;
+		var _p44 = _p43._0;
 		return A3(
 			make_line,
 			'lightgray',
-			{ctor: '_Tuple2', _0: _p23, _1: _p22._1},
-			{ctor: '_Tuple2', _0: _p23, _1: 370});
+			{ctor: '_Tuple2', _0: _p44, _1: _p43._1},
+			{ctor: '_Tuple2', _0: _p44, _1: 370});
 	};
 	var comfort_zone = {
 		ctor: '::',
@@ -17630,12 +18180,12 @@ var _mwm126$ahu$Ahu$psych_chart = function (model) {
 			}
 		}
 	};
-	var mkTempHr = function (_p24) {
-		var _p25 = _p24;
+	var mkTempHr = function (_p45) {
+		var _p46 = _p45;
 		return {
 			ctor: '_Tuple2',
-			_0: _mwm126$ahu$AhuUnits$Fahrenheit(_p25._0),
-			_1: _mwm126$ahu$AhuUnits$MolecularRatio(_p25._1)
+			_0: _mwm126$ahu$AhuUnits$Fahrenheit(_p46._0),
+			_1: _mwm126$ahu$AhuUnits$MolecularRatio(_p46._1)
 		};
 	};
 	var saturation_line = A2(
@@ -17708,61 +18258,55 @@ var _mwm126$ahu$Ahu$psych_chart = function (model) {
 					_0: _elm_lang$core$List$concat(
 						{
 							ctor: '::',
-							_0: A5(
+							_0: A4(
 								_mwm126$ahu$Ahu$air_state,
-								_mwm126$ahu$Ahu$outside_th(model),
-								'red',
+								_mwm126$ahu$Ahu$outside_thc(model),
 								'Outside Air (OA)',
 								'5',
 								'5'),
 							_1: {
 								ctor: '::',
-								_0: A5(
+								_0: A4(
 									_mwm126$ahu$Ahu$air_state,
-									_mwm126$ahu$Ahu$mixed_th(model),
-									'yellow',
+									_mwm126$ahu$Ahu$mixed_thc(model),
 									'Mixed Air (MA)',
 									'5',
 									'5'),
 								_1: {
 									ctor: '::',
-									_0: A5(
+									_0: A4(
 										_mwm126$ahu$Ahu$air_state,
-										_mwm126$ahu$Ahu$building_th(model),
-										'green',
+										_mwm126$ahu$Ahu$building_thc(model),
 										'Return Air (RA)',
 										'5',
 										'5'),
 									_1: {
 										ctor: '::',
-										_0: A5(
+										_0: A4(
 											_mwm126$ahu$Ahu$air_state,
-											_mwm126$ahu$Ahu$sa_th(model),
-											'blue',
+											_mwm126$ahu$Ahu$sa_thc(model),
 											'Supply Air (SA)',
 											'-90',
 											'5'),
 										_1: {
 											ctor: '::',
-											_0: A5(
+											_0: A4(
 												_mwm126$ahu$Ahu$air_state,
 												function (_) {
-													return _.oa_th;
+													return _.oa_thc;
 												}(
 													_mwm126$ahu$Ahu$sprite_states(model)),
-												'black',
 												'OA',
 												'15',
 												'15'),
 											_1: {
 												ctor: '::',
-												_0: A5(
+												_0: A4(
 													_mwm126$ahu$Ahu$air_state,
 													function (_) {
-														return _.recirc_th;
+														return _.recirc_thc;
 													}(
 														_mwm126$ahu$Ahu$sprite_states(model)),
-													'black',
 													'RA',
 													'15',
 													'-5'),
@@ -17798,271 +18342,9 @@ var _mwm126$ahu$Ahu$psych_chart = function (model) {
 			}
 		});
 };
-var _mwm126$ahu$Ahu$show_style = _elm_lang$html$Html_Attributes$style(
-	{
-		ctor: '::',
-		_0: {ctor: '_Tuple2', _0: 'float', _1: 'right'},
-		_1: {
-			ctor: '::',
-			_0: {ctor: '_Tuple2', _0: 'width', _1: '50%'},
-			_1: {
-				ctor: '::',
-				_0: {ctor: '_Tuple2', _0: 'display', _1: 'inline-block'},
-				_1: {ctor: '[]'}
-			}
-		}
-	});
-var _mwm126$ahu$Ahu$ctrl_style = _elm_lang$html$Html_Attributes$style(
-	{
-		ctor: '::',
-		_0: {ctor: '_Tuple2', _0: 'float', _1: 'left'},
-		_1: {
-			ctor: '::',
-			_0: {ctor: '_Tuple2', _0: 'width', _1: '65%'},
-			_1: {
-				ctor: '::',
-				_0: {ctor: '_Tuple2', _0: 'display', _1: 'inline-block'},
-				_1: {ctor: '[]'}
-			}
-		}
-	});
-var _mwm126$ahu$Ahu$stringToFloat = function (s) {
-	var _p26 = _elm_lang$core$String$toFloat(s);
-	if (_p26.ctor === 'Ok') {
-		return _p26._0;
-	} else {
-		return 0.0;
-	}
-};
-var _mwm126$ahu$Ahu$toTemp = function (s) {
-	var _p27 = _elm_lang$core$String$toFloat(s);
-	if (_p27.ctor === 'Ok') {
-		return _mwm126$ahu$AhuUnits$Fahrenheit(_p27._0);
-	} else {
-		return _mwm126$ahu$AhuUnits$Fahrenheit(0.0);
-	}
-};
-var _mwm126$ahu$Ahu$roundn = F2(
-	function (n, x) {
-		var f = _elm_lang$core$Basics$toFloat(
-			Math.pow(10, n));
-		var scaled = f * x;
-		var fh = _elm_lang$core$Basics$toFloat(
-			_elm_lang$core$Basics$round(scaled));
-		return fh / f;
-	});
-var _mwm126$ahu$Ahu$building_comment = function (model) {
-	var temp_min = _mwm126$ahu$AhuUnits$inFahrenheit(_mwm126$ahu$Ahu$comfort_temp_min);
-	var temp_max = _mwm126$ahu$AhuUnits$inFahrenheit(_mwm126$ahu$Ahu$comfort_temp_max);
-	var _p28 = _mwm126$ahu$Ahu$comfort_hr_min;
-	var hr_min = _p28._0;
-	var _p29 = _mwm126$ahu$Ahu$comfort_hr_max;
-	var hr_max = _p29._0;
-	var building_t = _mwm126$ahu$AhuUnits$inFahrenheit(model.building_air.t);
-	var _p30 = _mwm126$ahu$AhuModel$humidity_ratio(model.building_air);
-	var building_hr = _p30._0;
-	return (_elm_lang$core$Native_Utils.cmp(building_hr, hr_max) > 0) ? A2(
-		_elm_lang$core$Basics_ops['++'],
-		'Ugh!  It\'s too humid. Humidity:',
-		_elm_lang$core$Basics$toString(
-			A2(_mwm126$ahu$Ahu$roundn, 2, building_hr))) : ((_elm_lang$core$Native_Utils.cmp(building_hr, hr_min) < 0) ? A2(
-		_elm_lang$core$Basics_ops['++'],
-		'It\'s too dry. Humidity:',
-		_elm_lang$core$Basics$toString(building_hr)) : ((_elm_lang$core$Native_Utils.cmp(building_t, temp_max) > 0) ? A2(
-		_elm_lang$core$Basics_ops['++'],
-		'Whew!  It\'s too hot in here! Temperature:',
-		_elm_lang$core$Basics$toString(
-			A2(_mwm126$ahu$Ahu$roundn, 2, building_t))) : ((_elm_lang$core$Native_Utils.cmp(building_t, temp_min) < 0) ? A2(
-		_elm_lang$core$Basics_ops['++'],
-		'Brrr!  It\'s too cold in here! Temperature:',
-		_elm_lang$core$Basics$toString(
-			A2(_mwm126$ahu$Ahu$roundn, 2, building_t))) : '')));
-};
-var _mwm126$ahu$Ahu$control = F6(
-	function (set, minval, maxval, get, label, model) {
-		var val = function (_p31) {
-			return _elm_lang$core$Basics$toString(
-				A2(
-					_mwm126$ahu$Ahu$roundn,
-					2,
-					get(_p31)));
-		}(model);
-		return A2(
-			_elm_lang$html$Html$div,
-			{ctor: '[]'},
-			{
-				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$input,
-					{
-						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$type_('range'),
-						_1: {
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$min(
-								_elm_lang$core$Basics$toString(minval)),
-							_1: {
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$max(
-									_elm_lang$core$Basics$toString(maxval)),
-								_1: {
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$value(val),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$html$Html_Events$onInput(set),
-										_1: {ctor: '[]'}
-									}
-								}
-							}
-						}
-					},
-					{ctor: '[]'}),
-				_1: {
-					ctor: '::',
-					_0: _elm_lang$html$Html$text(
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							label,
-							A2(_elm_lang$core$Basics_ops['++'], ' ', val))),
-					_1: {ctor: '[]'}
-				}
-			});
-	});
-var _mwm126$ahu$Ahu$get_load = function (model) {
-	return _mwm126$ahu$AhuUnits$inTons(model.load);
-};
-var _mwm126$ahu$Ahu$get_cfm = function (model) {
-	var _p32 = model.cfm;
-	var cfm = _p32._0;
-	return cfm;
-};
-var _mwm126$ahu$Ahu$get_sa_t = function (model) {
-	return _mwm126$ahu$AhuUnits$inFahrenheit(model.supply_air.t);
-};
-var _mwm126$ahu$Ahu$get_oa_wb = function (model) {
-	return _mwm126$ahu$AhuUnits$inFahrenheit(model.outside_air_wb);
-};
-var _mwm126$ahu$Ahu$get_oa_t = function (model) {
-	return _mwm126$ahu$AhuUnits$inFahrenheit(model.outside_air_t);
-};
-var _mwm126$ahu$Ahu$cycle = 10;
-var _mwm126$ahu$Ahu$time_mod = F2(
-	function (time, model) {
-		var ct = _mwm126$ahu$Ahu$cycle;
-		var t = _elm_lang$core$Time$inSeconds(time);
-		return (t - (ct * _elm_lang$core$Basics$toFloat(
-			_elm_lang$core$Basics$floor(t / ct)))) / ct;
-	});
-var _mwm126$ahu$Ahu$init = {ctor: '_Tuple2', _0: _mwm126$ahu$AhuModel$init_model, _1: _elm_lang$core$Platform_Cmd$none};
-var _mwm126$ahu$Ahu$Sprites = F6(
-	function (a, b, c, d, e, f) {
-		return {recirc_th: a, oa_th: b, air_location: c, recirc_air_location: d, air_color: e, recirc_air_color: f};
-	});
-var _mwm126$ahu$Ahu$Mdl = function (a) {
-	return {ctor: 'Mdl', _0: a};
-};
-var _mwm126$ahu$Ahu$update = F2(
-	function (msg, model) {
-		var new_model = function () {
-			var _p33 = msg;
-			switch (_p33.ctor) {
-				case 'SetOap':
-					return _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							oa_p: _mwm126$ahu$Ahu$stringToFloat(_p33._0)
-						});
-				case 'SetCfm':
-					return _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							cfm: _mwm126$ahu$AhuUnits$toAirflow(_p33._0)
-						});
-				case 'SetShf':
-					return _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							load_shf: _mwm126$ahu$Ahu$stringToFloat(_p33._0) / 100
-						});
-				case 'SetTons':
-					return _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							load: _mwm126$ahu$AhuUnits$toTons(_p33._0)
-						});
-				case 'SetOawb':
-					return _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							outside_air_wb: _mwm126$ahu$Ahu$toTemp(_p33._0)
-						});
-				case 'SetSat':
-					return _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							supply_air: {
-								t: _mwm126$ahu$Ahu$toTemp(_p33._0),
-								rh: model.supply_air.rh
-							}
-						});
-				case 'SetOat':
-					return _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							outside_air_t: _mwm126$ahu$Ahu$toTemp(_p33._0)
-						});
-				case 'Tick':
-					return _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							time: A2(_mwm126$ahu$Ahu$time_mod, _p33._0, model),
-							building_air: _mwm126$ahu$AhuModel$new_building_air(model)
-						});
-				case 'SelectTab':
-					return _elm_lang$core$Native_Utils.update(
-						model,
-						{tab: _p33._0});
-				default:
-					return _elm_lang$core$Tuple$first(
-						A3(_debois$elm_mdl$Material$update, _mwm126$ahu$Ahu$Mdl, _p33._0, model));
-			}
-		}();
-		return {ctor: '_Tuple2', _0: new_model, _1: _elm_lang$core$Platform_Cmd$none};
-	});
-var _mwm126$ahu$Ahu$SelectTab = function (a) {
-	return {ctor: 'SelectTab', _0: a};
-};
-var _mwm126$ahu$Ahu$Tick = function (a) {
-	return {ctor: 'Tick', _0: a};
-};
-var _mwm126$ahu$Ahu$subscriptions = function (model) {
-	return A2(_elm_lang$core$Time$every, 0.1 * _elm_lang$core$Time$second, _mwm126$ahu$Ahu$Tick);
-};
-var _mwm126$ahu$Ahu$SetTons = function (a) {
-	return {ctor: 'SetTons', _0: a};
-};
-var _mwm126$ahu$Ahu$SetShf = function (a) {
-	return {ctor: 'SetShf', _0: a};
-};
-var _mwm126$ahu$Ahu$SetSat = function (a) {
-	return {ctor: 'SetSat', _0: a};
-};
-var _mwm126$ahu$Ahu$SetOawb = function (a) {
-	return {ctor: 'SetOawb', _0: a};
-};
-var _mwm126$ahu$Ahu$SetOat = function (a) {
-	return {ctor: 'SetOat', _0: a};
-};
-var _mwm126$ahu$Ahu$SetOap = function (a) {
-	return {ctor: 'SetOap', _0: a};
-};
-var _mwm126$ahu$Ahu$SetCfm = function (a) {
-	return {ctor: 'SetCfm', _0: a};
-};
 var _mwm126$ahu$Ahu$ahusim = function (model) {
-	var _p34 = model.building_air.rh;
-	var building_rh = _p34._0;
+	var _p47 = model.building_air.rh;
+	var building_rh = _p47._0;
 	var building_t = _mwm126$ahu$AhuUnits$inFahrenheit(model.building_air.t);
 	var shf_in = _mwm126$ahu$AhuModel$supply_shf(model);
 	var q_sens = _mwm126$ahu$AhuUnits$inTons(
@@ -18093,19 +18375,11 @@ var _mwm126$ahu$Ahu$ahusim = function (model) {
 			_0: _elm_lang$html$Html_Attributes$style(
 				{
 					ctor: '::',
-					_0: {ctor: '_Tuple2', _0: 'float', _1: 'left'},
+					_0: {ctor: '_Tuple2', _0: 'position', _1: 'fixed'},
 					_1: {
 						ctor: '::',
-						_0: {ctor: '_Tuple2', _0: 'width', _1: '50%'},
-						_1: {
-							ctor: '::',
-							_0: {ctor: '_Tuple2', _0: 'position', _1: 'fixed'},
-							_1: {
-								ctor: '::',
-								_0: {ctor: '_Tuple2', _0: 'padding', _1: '1%'},
-								_1: {ctor: '[]'}
-							}
-						}
+						_0: {ctor: '_Tuple2', _0: 'padding', _1: '1%'},
+						_1: {ctor: '[]'}
 					}
 				}),
 			_1: {ctor: '[]'}
@@ -18116,125 +18390,231 @@ var _mwm126$ahu$Ahu$ahusim = function (model) {
 				_elm_lang$html$Html$div,
 				{
 					ctor: '::',
-					_0: _mwm126$ahu$Ahu$ctrl_style,
+					_0: _elm_lang$html$Html_Attributes$style(
+						{
+							ctor: '::',
+							_0: {ctor: '_Tuple2', _0: 'right', _1: '30px'},
+							_1: {
+								ctor: '::',
+								_0: {ctor: '_Tuple2', _0: 'position', _1: 'absolute'},
+								_1: {ctor: '[]'}
+							}
+						}),
 					_1: {ctor: '[]'}
 				},
 				{
 					ctor: '::',
-					_0: _elm_lang$html$Html$text('Specify the weather outdoors.'),
-					_1: {
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$div,
-							{
+					_0: A5(
+						_debois$elm_mdl$Material_Toggles$switch,
+						_mwm126$ahu$Ahu$Mdl,
+						{
+							ctor: '::',
+							_0: 0,
+							_1: {ctor: '[]'}
+						},
+						model.mdl,
+						{
+							ctor: '::',
+							_0: _debois$elm_mdl$Material_Options$onToggle(_mwm126$ahu$Ahu$ToggleUnits),
+							_1: {
 								ctor: '::',
-								_0: _mwm126$ahu$Ahu$redStyle,
-								_1: {ctor: '[]'}
-							},
-							{
-								ctor: '::',
-								_0: A6(_mwm126$ahu$Ahu$control, _mwm126$ahu$Ahu$SetOat, 80.0, 94.0, _mwm126$ahu$Ahu$get_oa_t, 'Outside Air Temp (°F)', model),
+								_0: _debois$elm_mdl$Material_Toggles$ripple,
 								_1: {
 									ctor: '::',
-									_0: A6(_mwm126$ahu$Ahu$control, _mwm126$ahu$Ahu$SetOawb, 65.0, 85.0, _mwm126$ahu$Ahu$get_oa_wb, 'Outside Air Wet Bulb (°F)', model),
-									_1: {
-										ctor: '::',
-										_0: A6(
-											_mwm126$ahu$Ahu$control,
-											_mwm126$ahu$Ahu$SetOap,
-											20.0,
-											100.0,
-											function (_) {
-												return _.oa_p;
-											},
-											'Outside Air %',
-											model),
-										_1: {ctor: '[]'}
-									}
+									_0: _debois$elm_mdl$Material_Toggles$value(
+										_elm_lang$core$Native_Utils.eq(model.system, _mwm126$ahu$AhuUnits$Metric)),
+									_1: {ctor: '[]'}
 								}
-							}),
+							}
+						},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text('Metric?'),
+							_1: {ctor: '[]'}
+						}),
+					_1: {ctor: '[]'}
+				}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$div,
+					{
+						ctor: '::',
+						_0: _mwm126$ahu$Ahu$ctrl_style,
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text('Specify the weather outdoors.'),
 						_1: {
 							ctor: '::',
 							_0: A2(
-								_elm_lang$html$Html$p,
-								{ctor: '[]'},
-								{ctor: '[]'}),
+								_elm_lang$html$Html$div,
+								{
+									ctor: '::',
+									_0: _mwm126$ahu$Ahu$redStyle,
+									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: A5(
+										_mwm126$ahu$Ahu$control,
+										model,
+										_mwm126$ahu$Ahu$SetOat,
+										_mwm126$ahu$Ahu$oa_t_range(model),
+										_mwm126$ahu$Ahu$get_oa_t,
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											'Outside Air Temp ',
+											A2(_mwm126$ahu$AhuUnits$inUnitsString, model.system, model.outside_air_t))),
+									_1: {
+										ctor: '::',
+										_0: A5(
+											_mwm126$ahu$Ahu$control,
+											model,
+											_mwm126$ahu$Ahu$SetOawb,
+											_mwm126$ahu$Ahu$oawb_range(model),
+											_mwm126$ahu$Ahu$get_oa_wb,
+											A2(
+												_elm_lang$core$Basics_ops['++'],
+												'Outside Air Wet Bulb ',
+												A2(_mwm126$ahu$AhuUnits$inUnitsString, model.system, model.outside_air_wb))),
+										_1: {
+											ctor: '::',
+											_0: A5(
+												_mwm126$ahu$Ahu$control,
+												model,
+												_mwm126$ahu$Ahu$SetOap,
+												{ctor: '_Tuple2', _0: 20.0, _1: 100.0},
+												function (_) {
+													return _.oa_p;
+												},
+												A2(
+													_elm_lang$core$Basics_ops['++'],
+													'Outside Air ',
+													A2(
+														_elm_lang$core$Basics_ops['++'],
+														_elm_lang$core$Basics$toString(model.oa_p),
+														'%'))),
+											_1: {ctor: '[]'}
+										}
+									}
+								}),
 							_1: {
 								ctor: '::',
-								_0: _elm_lang$html$Html$text('Setup the system by specifying load...'),
+								_0: A2(
+									_elm_lang$html$Html$p,
+									{ctor: '[]'},
+									{ctor: '[]'}),
 								_1: {
 									ctor: '::',
-									_0: A2(
-										_elm_lang$html$Html$div,
-										{
-											ctor: '::',
-											_0: _mwm126$ahu$Ahu$grayStyle,
-											_1: {ctor: '[]'}
-										},
-										{
-											ctor: '::',
-											_0: A6(_mwm126$ahu$Ahu$control, _mwm126$ahu$Ahu$SetTons, 40.0, 100.0, _mwm126$ahu$Ahu$get_load, 'Cooling Load (Tons)', model),
-											_1: {
-												ctor: '::',
-												_0: A6(
-													_mwm126$ahu$Ahu$control,
-													_mwm126$ahu$Ahu$SetShf,
-													40.0,
-													100.0,
-													function (_p35) {
-														return A2(
-															F2(
-																function (x, y) {
-																	return x * y;
-																}),
-															100,
-															function (_) {
-																return _.load_shf;
-															}(_p35));
-													},
-													'Load Sensible Heat Factor (%)',
-													model),
-												_1: {ctor: '[]'}
-											}
-										}),
+									_0: _elm_lang$html$Html$text('Setup the system by specifying load...'),
 									_1: {
 										ctor: '::',
 										_0: A2(
-											_elm_lang$html$Html$p,
-											{ctor: '[]'},
-											{ctor: '[]'}),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$html$Html$text('Now adjust the system to maintain comfort.'),
-											_1: {
+											_elm_lang$html$Html$div,
+											{
 												ctor: '::',
-												_0: A2(
-													_elm_lang$html$Html$div,
-													{
-														ctor: '::',
-														_0: _mwm126$ahu$Ahu$blueStyle,
-														_1: {ctor: '[]'}
-													},
-													{
-														ctor: '::',
-														_0: A6(_mwm126$ahu$Ahu$control, _mwm126$ahu$Ahu$SetSat, 45.0, 60.0, _mwm126$ahu$Ahu$get_sa_t, 'Supply Air Temp', model),
-														_1: {
-															ctor: '::',
-															_0: A6(_mwm126$ahu$Ahu$control, _mwm126$ahu$Ahu$SetCfm, 20000.0, 50000.0, _mwm126$ahu$Ahu$get_cfm, 'CFM', model),
-															_1: {ctor: '[]'}
-														}
-													}),
+												_0: _mwm126$ahu$Ahu$grayStyle,
+												_1: {ctor: '[]'}
+											},
+											{
+												ctor: '::',
+												_0: A5(
+													_mwm126$ahu$Ahu$control,
+													model,
+													_mwm126$ahu$Ahu$SetTons,
+													_mwm126$ahu$Ahu$load_range(model),
+													_mwm126$ahu$Ahu$get_load,
+													A2(
+														_elm_lang$core$Basics_ops['++'],
+														'Cooling Load ',
+														A2(_mwm126$ahu$AhuUnits$inUnitsPowerString, model.system, model.load))),
 												_1: {
 													ctor: '::',
-													_0: _elm_lang$html$Html$text(
-														_mwm126$ahu$Ahu$building_comment(model)),
+													_0: A5(
+														_mwm126$ahu$Ahu$control,
+														model,
+														_mwm126$ahu$Ahu$SetShf,
+														{ctor: '_Tuple2', _0: 40.0, _1: 100.0},
+														function (_p48) {
+															return A2(
+																F2(
+																	function (x, y) {
+																		return x * y;
+																	}),
+																100,
+																function (_) {
+																	return _.load_shf;
+																}(_p48));
+														},
+														A2(
+															_elm_lang$core$Basics_ops['++'],
+															'Load Sensible Heat Factor ',
+															A2(
+																_elm_lang$core$Basics_ops['++'],
+																_elm_lang$core$Basics$toString(100 * model.load_shf),
+																'%'))),
+													_1: {ctor: '[]'}
+												}
+											}),
+										_1: {
+											ctor: '::',
+											_0: A2(
+												_elm_lang$html$Html$p,
+												{ctor: '[]'},
+												{ctor: '[]'}),
+											_1: {
+												ctor: '::',
+												_0: _elm_lang$html$Html$text('Now adjust the system to maintain comfort.'),
+												_1: {
+													ctor: '::',
+													_0: A2(
+														_elm_lang$html$Html$div,
+														{
+															ctor: '::',
+															_0: _mwm126$ahu$Ahu$blueStyle,
+															_1: {ctor: '[]'}
+														},
+														{
+															ctor: '::',
+															_0: A5(
+																_mwm126$ahu$Ahu$control,
+																model,
+																_mwm126$ahu$Ahu$SetSat,
+																_mwm126$ahu$Ahu$sa_t_range(model),
+																_mwm126$ahu$Ahu$get_sa_t,
+																A2(
+																	_elm_lang$core$Basics_ops['++'],
+																	'Supply Air Temp ',
+																	A2(_mwm126$ahu$AhuUnits$inUnitsString, model.system, model.supply_air.t))),
+															_1: {
+																ctor: '::',
+																_0: A5(
+																	_mwm126$ahu$Ahu$control,
+																	model,
+																	_mwm126$ahu$Ahu$SetAirflow,
+																	_mwm126$ahu$Ahu$airflow_range(model),
+																	_mwm126$ahu$Ahu$get_airflow,
+																	A2(
+																		_elm_lang$core$Basics_ops['++'],
+																		'Airflow ',
+																		A2(_mwm126$ahu$AhuUnits$inUnitsAirflowString, model.system, model.airflow))),
+																_1: {ctor: '[]'}
+															}
+														}),
 													_1: {
 														ctor: '::',
-														_0: A2(
-															_elm_lang$html$Html$p,
-															{ctor: '[]'},
-															{ctor: '[]'}),
-														_1: {ctor: '[]'}
+														_0: _elm_lang$html$Html$text(
+															_mwm126$ahu$Ahu$building_comment(model)),
+														_1: {
+															ctor: '::',
+															_0: A2(
+																_elm_lang$html$Html$p,
+																{ctor: '[]'},
+																{ctor: '[]'}),
+															_1: {ctor: '[]'}
+														}
 													}
 												}
 											}
@@ -18243,28 +18623,6 @@ var _mwm126$ahu$Ahu$ahusim = function (model) {
 								}
 							}
 						}
-					}
-				}),
-			_1: {
-				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$div,
-					{
-						ctor: '::',
-						_0: _mwm126$ahu$Ahu$show_style,
-						_1: {ctor: '[]'}
-					},
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html$text(''),
-						_1: {
-							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$p,
-								{ctor: '[]'},
-								{ctor: '[]'}),
-							_1: {ctor: '[]'}
-						}
 					}),
 				_1: {
 					ctor: '::',
@@ -18272,44 +18630,66 @@ var _mwm126$ahu$Ahu$ahusim = function (model) {
 						_elm_lang$html$Html$div,
 						{
 							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$style(
-								{
-									ctor: '::',
-									_0: {ctor: '_Tuple2', _0: 'margin-left', _1: '100px'},
-									_1: {ctor: '[]'}
-								}),
+							_0: _mwm126$ahu$Ahu$show_style,
 							_1: {ctor: '[]'}
 						},
 						{
 							ctor: '::',
-							_0: A2(
-								_elm_lang$svg$Svg$svg,
-								{
-									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$viewBox('0 0 600 400'),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$svg$Svg_Attributes$width('100%'),
-										_1: {ctor: '[]'}
-									}
-								},
-								_elm_lang$core$List$concat(
+							_0: _elm_lang$html$Html$text(''),
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$p,
+									{ctor: '[]'},
+									{ctor: '[]'}),
+								_1: {ctor: '[]'}
+							}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$div,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$style(
 									{
 										ctor: '::',
-										_0: A3(_mwm126$ahu$Ahu$protractor, pro_x, pro_y, model),
+										_0: {ctor: '_Tuple2', _0: 'margin-left', _1: '100px'},
+										_1: {ctor: '[]'}
+									}),
+								_1: {ctor: '[]'}
+							},
+							{
+								ctor: '::',
+								_0: A2(
+									_elm_lang$svg$Svg$svg,
+									{
+										ctor: '::',
+										_0: _elm_lang$svg$Svg_Attributes$viewBox('0 0 600 400'),
 										_1: {
 											ctor: '::',
-											_0: _mwm126$ahu$Ahu$house(model),
+											_0: _elm_lang$svg$Svg_Attributes$width('100%'),
+											_1: {ctor: '[]'}
+										}
+									},
+									_elm_lang$core$List$concat(
+										{
+											ctor: '::',
+											_0: A3(_mwm126$ahu$Ahu$protractor, pro_x, pro_y, model),
 											_1: {
 												ctor: '::',
-												_0: _mwm126$ahu$Ahu$psych_chart(model),
-												_1: {ctor: '[]'}
+												_0: _mwm126$ahu$Ahu$house(model),
+												_1: {
+													ctor: '::',
+													_0: _mwm126$ahu$Ahu$psych_chart(model),
+													_1: {ctor: '[]'}
+												}
 											}
-										}
-									})),
-							_1: {ctor: '[]'}
-						}),
-					_1: {ctor: '[]'}
+										})),
+								_1: {ctor: '[]'}
+							}),
+						_1: {ctor: '[]'}
+					}
 				}
 			}
 		});
@@ -18362,7 +18742,7 @@ var _mwm126$ahu$Ahu$view = function (model) {
 								{ctor: '[]'}),
 							_1: {
 								ctor: '::',
-								_0: _elm_lang$html$Html$text('AHU Simulation'),
+								_0: _elm_lang$html$Html$text('Simulation'),
 								_1: {ctor: '[]'}
 							}
 						}
@@ -18407,7 +18787,7 @@ var _mwm126$ahu$Ahu$view = function (model) {
 							},
 							{
 								ctor: '::',
-								_0: _debois$elm_mdl$Material_Icon$i('publication'),
+								_0: _debois$elm_mdl$Material_Icon$i('source'),
 								_1: {
 									ctor: '::',
 									_0: A2(
@@ -18420,12 +18800,42 @@ var _mwm126$ahu$Ahu$view = function (model) {
 										{ctor: '[]'}),
 									_1: {
 										ctor: '::',
-										_0: _elm_lang$html$Html$text('Publication'),
+										_0: _elm_lang$html$Html$text('Source'),
 										_1: {ctor: '[]'}
 									}
 								}
 							}),
-						_1: {ctor: '[]'}
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_debois$elm_mdl$Material_Tabs$label,
+								{
+									ctor: '::',
+									_0: _debois$elm_mdl$Material_Options$center,
+									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: _debois$elm_mdl$Material_Icon$i('publication'),
+									_1: {
+										ctor: '::',
+										_0: A2(
+											_debois$elm_mdl$Material_Options$span,
+											{
+												ctor: '::',
+												_0: A2(_debois$elm_mdl$Material_Options$css, 'width', '4px'),
+												_1: {ctor: '[]'}
+											},
+											{ctor: '[]'}),
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$html$Html$text('Publication'),
+											_1: {ctor: '[]'}
+										}
+									}
+								}),
+							_1: {ctor: '[]'}
+						}
 					}
 				}
 			},
@@ -18453,8 +18863,8 @@ var _mwm126$ahu$Ahu$view = function (model) {
 					{
 						ctor: '::',
 						_0: function () {
-							var _p36 = model.tab;
-							switch (_p36) {
+							var _p49 = model.tab;
+							switch (_p49) {
 								case 0:
 									return _mwm126$ahu$Ahu$ahusim(model);
 								case 1:
@@ -18467,6 +18877,18 @@ var _mwm126$ahu$Ahu$view = function (model) {
 												_evancz$elm_markdown$Markdown$toHtml,
 												{ctor: '[]'},
 												_mwm126$ahu$AhuInstructions$ahuinstructions),
+											_1: {ctor: '[]'}
+										});
+								case 2:
+									return A2(
+										_elm_lang$html$Html$article,
+										{ctor: '[]'},
+										{
+											ctor: '::',
+											_0: A2(
+												_evancz$elm_markdown$Markdown$toHtml,
+												{ctor: '[]'},
+												_mwm126$ahu$Ahu$ahusource),
 											_1: {ctor: '[]'}
 										});
 								default:
