@@ -16749,7 +16749,7 @@ var _mwm126$ahu$Ahu$sa_thc = function (model) {
 		ctor: '_Tuple3',
 		_0: model.supply_air.t,
 		_1: _mwm126$ahu$AhuModel$humidity_ratio(model.supply_air),
-		_2: _elm_lang$core$Color$blue
+		_2: _elm_lang$core$Color$lightBlue
 	};
 };
 var _mwm126$ahu$Ahu$building_thc = function (model) {
@@ -17606,8 +17606,8 @@ var _mwm126$ahu$Ahu$sprite_states = function (model) {
 					{ctor: '_Tuple2', _0: xx + (_mwm126$ahu$Ahu$duct_width * 0.3), _1: yy},
 					{ctor: '_Tuple2', _0: xx + (_mwm126$ahu$Ahu$duct_width * 0.3), _1: yy + _mwm126$ahu$Ahu$duct_height},
 					_p30),
-				air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$red, _p30),
-				recirc_air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$green, _p30)
+				air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$green, _p30),
+				recirc_air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$red, _p30)
 			};
 		case 'EnteringCooling':
 			var _p31 = _p28._0;
@@ -17985,7 +17985,7 @@ var _mwm126$ahu$Ahu$house = function (model) {
 														10,
 														(1 - (model.oa_p / 100)) - 0.25,
 														0.75,
-														_elm_lang$core$Basics$toString(
+														_mwm126$ahu$Ahu$asString(
 															_mwm126$ahu$Ahu$sprite_states(model).recirc_air_color)),
 													_1: {
 														ctor: '::',
@@ -17996,7 +17996,7 @@ var _mwm126$ahu$Ahu$house = function (model) {
 															10,
 															-0.25,
 															(1.0 - (model.oa_p / 100)) - 0.25,
-															_elm_lang$core$Basics$toString(
+															_mwm126$ahu$Ahu$asString(
 																_mwm126$ahu$Ahu$sprite_states(model).air_color)),
 														_1: {ctor: '[]'}
 													}
