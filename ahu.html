@@ -17278,16 +17278,18 @@ var _mwm126$ahu$Ahu$show_style = _elm_lang$html$Html_Attributes$style(
 var _mwm126$ahu$Ahu$ctrl_style = _elm_lang$html$Html_Attributes$style(
 	{
 		ctor: '::',
-		_0: {ctor: '_Tuple2', _0: 'float', _1: 'left'},
+		_0: {ctor: '_Tuple2', _0: 'display', _1: 'inline-block'},
 		_1: {
 			ctor: '::',
-			_0: {ctor: '_Tuple2', _0: 'width', _1: '65%'},
-			_1: {
-				ctor: '::',
-				_0: {ctor: '_Tuple2', _0: 'display', _1: 'inline-block'},
-				_1: {ctor: '[]'}
-			}
+			_0: {ctor: '_Tuple2', _0: 'text-align', _1: 'left'},
+			_1: {ctor: '[]'}
 		}
+	});
+var _mwm126$ahu$Ahu$control_style = _elm_lang$html$Html_Attributes$style(
+	{
+		ctor: '::',
+		_0: {ctor: '_Tuple2', _0: 'padding', _1: '5px 10px'},
+		_1: {ctor: '[]'}
 	});
 var _mwm126$ahu$Ahu$stringToFloat = function (s) {
 	var _p18 = _elm_lang$core$String$toFloat(s);
@@ -17371,7 +17373,11 @@ var _mwm126$ahu$Ahu$control = F5(
 		var maxval = _p26._1;
 		return A2(
 			_elm_lang$html$Html$div,
-			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: _mwm126$ahu$Ahu$control_style,
+				_1: {ctor: '[]'}
+			},
 			{
 				ctor: '::',
 				_0: A2(
@@ -18375,10 +18381,10 @@ var _mwm126$ahu$Ahu$ahusim = function (model) {
 			_0: _elm_lang$html$Html_Attributes$style(
 				{
 					ctor: '::',
-					_0: {ctor: '_Tuple2', _0: 'position', _1: 'fixed'},
+					_0: {ctor: '_Tuple2', _0: 'width', _1: '100%'},
 					_1: {
 						ctor: '::',
-						_0: {ctor: '_Tuple2', _0: 'padding', _1: '1%'},
+						_0: {ctor: '_Tuple2', _0: 'text-align', _1: 'center'},
 						_1: {ctor: '[]'}
 					}
 				}),
@@ -18390,16 +18396,7 @@ var _mwm126$ahu$Ahu$ahusim = function (model) {
 				_elm_lang$html$Html$div,
 				{
 					ctor: '::',
-					_0: _elm_lang$html$Html_Attributes$style(
-						{
-							ctor: '::',
-							_0: {ctor: '_Tuple2', _0: 'right', _1: '30px'},
-							_1: {
-								ctor: '::',
-								_0: {ctor: '_Tuple2', _0: 'position', _1: 'absolute'},
-								_1: {ctor: '[]'}
-							}
-						}),
+					_0: _mwm126$ahu$Ahu$ctrl_style,
 					_1: {ctor: '[]'}
 				},
 				{
@@ -18432,18 +18429,7 @@ var _mwm126$ahu$Ahu$ahusim = function (model) {
 							_0: _elm_lang$html$Html$text('Metric?'),
 							_1: {ctor: '[]'}
 						}),
-					_1: {ctor: '[]'}
-				}),
-			_1: {
-				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$div,
-					{
-						ctor: '::',
-						_0: _mwm126$ahu$Ahu$ctrl_style,
-						_1: {ctor: '[]'}
-					},
-					{
+					_1: {
 						ctor: '::',
 						_0: _elm_lang$html$Html$text('Specify the weather outdoors.'),
 						_1: {
@@ -18623,74 +18609,68 @@ var _mwm126$ahu$Ahu$ahusim = function (model) {
 								}
 							}
 						}
-					}),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$div,
-						{
-							ctor: '::',
-							_0: _mwm126$ahu$Ahu$show_style,
-							_1: {ctor: '[]'}
-						},
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html$text(''),
-							_1: {
-								ctor: '::',
-								_0: A2(
-									_elm_lang$html$Html$p,
-									{ctor: '[]'},
-									{ctor: '[]'}),
-								_1: {ctor: '[]'}
-							}
-						}),
-					_1: {
+					}
+				}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$div,
+					{
 						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$div,
+						_0: _elm_lang$html$Html_Attributes$style(
 							{
 								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$style(
-									{
+								_0: {ctor: '_Tuple2', _0: 'margin-left', _1: '10px'},
+								_1: {
+									ctor: '::',
+									_0: {ctor: '_Tuple2', _0: 'display', _1: 'inline-block'},
+									_1: {
 										ctor: '::',
-										_0: {ctor: '_Tuple2', _0: 'margin-left', _1: '100px'},
-										_1: {ctor: '[]'}
-									}),
-								_1: {ctor: '[]'}
-							},
-							{
-								ctor: '::',
-								_0: A2(
-									_elm_lang$svg$Svg$svg,
-									{
-										ctor: '::',
-										_0: _elm_lang$svg$Svg_Attributes$viewBox('0 0 600 400'),
+										_0: {ctor: '_Tuple2', _0: 'vertical-align', _1: 'top'},
 										_1: {
 											ctor: '::',
-											_0: _elm_lang$svg$Svg_Attributes$width('100%'),
-											_1: {ctor: '[]'}
-										}
-									},
-									_elm_lang$core$List$concat(
-										{
-											ctor: '::',
-											_0: A3(_mwm126$ahu$Ahu$protractor, pro_x, pro_y, model),
+											_0: {ctor: '_Tuple2', _0: 'border', _1: '1px solid black'},
 											_1: {
 												ctor: '::',
-												_0: _mwm126$ahu$Ahu$house(model),
-												_1: {
-													ctor: '::',
-													_0: _mwm126$ahu$Ahu$psych_chart(model),
-													_1: {ctor: '[]'}
-												}
+												_0: {ctor: '_Tuple2', _0: 'width', _1: '50%'},
+												_1: {ctor: '[]'}
 											}
-										})),
-								_1: {ctor: '[]'}
+										}
+									}
+								}
 							}),
 						_1: {ctor: '[]'}
-					}
-				}
+					},
+					{
+						ctor: '::',
+						_0: A2(
+							_elm_lang$svg$Svg$svg,
+							{
+								ctor: '::',
+								_0: _elm_lang$svg$Svg_Attributes$viewBox('0 0 600 400'),
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$svg$Svg_Attributes$width('100%'),
+									_1: {ctor: '[]'}
+								}
+							},
+							_elm_lang$core$List$concat(
+								{
+									ctor: '::',
+									_0: A3(_mwm126$ahu$Ahu$protractor, pro_x, pro_y, model),
+									_1: {
+										ctor: '::',
+										_0: _mwm126$ahu$Ahu$house(model),
+										_1: {
+											ctor: '::',
+											_0: _mwm126$ahu$Ahu$psych_chart(model),
+											_1: {ctor: '[]'}
+										}
+									}
+								})),
+						_1: {ctor: '[]'}
+					}),
+				_1: {ctor: '[]'}
 			}
 		});
 };
