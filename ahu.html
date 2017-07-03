@@ -17173,11 +17173,11 @@ var _mwm126$ahu$Ahu$protractor = F3(
 			}
 		};
 	});
-var _mwm126$ahu$Ahu$house_y = 10;
-var _mwm126$ahu$Ahu$house_x = _mwm126$ahu$AhuUnits$Fahrenheit(10);
+var _mwm126$ahu$Ahu$house_y = 30;
+var _mwm126$ahu$Ahu$house_x = _mwm126$ahu$AhuUnits$Fahrenheit(50);
 var _mwm126$ahu$Ahu$air_radius = 10;
-var _mwm126$ahu$Ahu$duct_height = 3 * _mwm126$ahu$Ahu$air_radius;
-var _mwm126$ahu$Ahu$duct_width = 8 * _mwm126$ahu$Ahu$air_radius;
+var _mwm126$ahu$Ahu$duct_height = 6 * _mwm126$ahu$Ahu$air_radius;
+var _mwm126$ahu$Ahu$duct_width = 12 * _mwm126$ahu$Ahu$air_radius;
 var _mwm126$ahu$Ahu$comfort_hr_min = _mwm126$ahu$AhuUnits$MolecularRatio(5.5e-3);
 var _mwm126$ahu$Ahu$comfort_hr_max = _mwm126$ahu$AhuUnits$MolecularRatio(1.1e-2);
 var _mwm126$ahu$Ahu$comfort_rh_min = _mwm126$ahu$AhuUnits$HPercent(30);
@@ -17437,9 +17437,13 @@ var _mwm126$ahu$Ahu$time_mod = F2(
 			_elm_lang$core$Basics$floor(t / ct)))) / ct;
 	});
 var _mwm126$ahu$Ahu$init = {ctor: '_Tuple2', _0: _mwm126$ahu$AhuModel$init_model, _1: _elm_lang$core$Platform_Cmd$none};
-var _mwm126$ahu$Ahu$Sprites = F6(
-	function (a, b, c, d, e, f) {
-		return {recirc_thc: a, oa_thc: b, air_location: c, recirc_air_location: d, air_color: e, recirc_air_color: f};
+var _mwm126$ahu$Ahu$ThcSprites = F2(
+	function (a, b) {
+		return {recirc_thc: a, oa_thc: b};
+	});
+var _mwm126$ahu$Ahu$PieSprites = F4(
+	function (a, b, c, d) {
+		return {air_location: a, recirc_air_location: b, air_color: c, recirc_air_color: d};
 	});
 var _mwm126$ahu$Ahu$Mdl = function (a) {
 	return {ctor: 'Mdl', _0: a};
@@ -17565,459 +17569,66 @@ var _mwm126$ahu$Ahu$find_stage = function (model) {
 	var t = model.time;
 	return (_elm_lang$core$Native_Utils.cmp(model.time, 0.25) < 0) ? _mwm126$ahu$Ahu$ExitingBuilding(model.time / 0.25) : ((_elm_lang$core$Native_Utils.cmp(model.time, 0.5) < 0) ? _mwm126$ahu$Ahu$MixingIntake((model.time - 0.25) / 0.25) : ((_elm_lang$core$Native_Utils.cmp(model.time, 0.75) < 0) ? _mwm126$ahu$Ahu$EnteringCooling((model.time - 0.5) / 0.25) : _mwm126$ahu$Ahu$EnteringBuilding((model.time - 0.75) / 0.25)));
 };
-var _mwm126$ahu$Ahu$sprite_states = function (model) {
+var _mwm126$ahu$Ahu$thc_sprites = function (model) {
+	var mixed = _mwm126$ahu$Ahu$mixed_thc(model);
+	var building = _mwm126$ahu$Ahu$building_thc(model);
 	var stage = _mwm126$ahu$Ahu$find_stage(model);
 	var yy = _mwm126$ahu$Ahu$house_y;
 	var xx = _mwm126$ahu$AhuUnits$inFahrenheit(_mwm126$ahu$Ahu$house_x);
 	var _p28 = stage;
 	switch (_p28.ctor) {
 		case 'ExitingBuilding':
+			return {recirc_thc: building, oa_thc: building};
+		case 'MixingIntake':
 			var _p29 = _p28._0;
 			return {
-				recirc_thc: _mwm126$ahu$Ahu$building_thc(model),
-				oa_thc: _mwm126$ahu$Ahu$building_thc(model),
-				air_location: A3(
-					_mwm126$ahu$Ahu$avg,
-					{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy},
-					{ctor: '_Tuple2', _0: xx, _1: yy},
-					_p29),
-				recirc_air_location: A3(
-					_mwm126$ahu$Ahu$avg,
-					{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy},
-					{ctor: '_Tuple2', _0: xx + (_mwm126$ahu$Ahu$duct_width * 0.3), _1: yy},
-					_p29),
-				air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$green, _p29),
-				recirc_air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$green, _p29)
-			};
-		case 'MixingIntake':
-			var _p30 = _p28._0;
-			return {
-				recirc_thc: A3(
-					_mwm126$ahu$Ahu$avg_thc,
-					_mwm126$ahu$Ahu$building_thc(model),
-					_mwm126$ahu$Ahu$mixed_thc(model),
-					_p30),
+				recirc_thc: A3(_mwm126$ahu$Ahu$avg_thc, building, mixed, _p29),
 				oa_thc: A3(
 					_mwm126$ahu$Ahu$avg_thc,
 					_mwm126$ahu$Ahu$outside_thc(model),
-					_mwm126$ahu$Ahu$mixed_thc(model),
-					_p30),
-				air_location: A3(
-					_mwm126$ahu$Ahu$avg,
-					{ctor: '_Tuple2', _0: xx, _1: yy},
-					{ctor: '_Tuple2', _0: xx, _1: yy + _mwm126$ahu$Ahu$duct_height},
-					_p30),
-				recirc_air_location: A3(
-					_mwm126$ahu$Ahu$avg,
-					{ctor: '_Tuple2', _0: xx + (_mwm126$ahu$Ahu$duct_width * 0.3), _1: yy},
-					{ctor: '_Tuple2', _0: xx + (_mwm126$ahu$Ahu$duct_width * 0.3), _1: yy + _mwm126$ahu$Ahu$duct_height},
-					_p30),
-				air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$green, _p30),
-				recirc_air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$red, _p30)
+					mixed,
+					_p29)
 			};
 		case 'EnteringCooling':
-			var _p31 = _p28._0;
-			return {
-				recirc_thc: A3(
-					_mwm126$ahu$Ahu$avg_thc,
-					_mwm126$ahu$Ahu$mixed_thc(model),
-					_mwm126$ahu$Ahu$sa_thc(model),
-					_p31),
-				oa_thc: A3(
-					_mwm126$ahu$Ahu$avg_thc,
-					_mwm126$ahu$Ahu$mixed_thc(model),
-					_mwm126$ahu$Ahu$sa_thc(model),
-					_p31),
-				air_location: A3(
-					_mwm126$ahu$Ahu$avg,
-					{ctor: '_Tuple2', _0: xx, _1: yy + _mwm126$ahu$Ahu$duct_height},
-					{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy + _mwm126$ahu$Ahu$duct_height},
-					_p31),
-				recirc_air_location: A3(
-					_mwm126$ahu$Ahu$avg,
-					{ctor: '_Tuple2', _0: xx + (_mwm126$ahu$Ahu$duct_width * 0.3), _1: yy + _mwm126$ahu$Ahu$duct_height},
-					{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy + _mwm126$ahu$Ahu$duct_height},
-					_p31),
-				air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$yellow, _elm_lang$core$Color$blue, _p31),
-				recirc_air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$green, _p31)
-			};
+			var _p33 = _p28._0;
+			var th_xy = function () {
+				var _p30 = mixed;
+				var mix_t = _p30._0;
+				var mix_h = _p30._1;
+				if (_elm_lang$core$Native_Utils.cmp(_p33, 0.5) < 0) {
+					var _p31 = A3(
+						_mwm126$ahu$Ahu$avg_thc,
+						mixed,
+						_mwm126$ahu$Ahu$sa_thc(model),
+						_p33);
+					var avg_t = _p31._0;
+					var avg_h = _p31._1;
+					var c = _p31._2;
+					return {ctor: '_Tuple3', _0: avg_t, _1: mix_h, _2: c};
+				} else {
+					var _p32 = A3(
+						_mwm126$ahu$Ahu$avg_thc,
+						mixed,
+						_mwm126$ahu$Ahu$sa_thc(model),
+						0.5);
+					var half_t = _p32._0;
+					var c = _p32._2;
+					return A3(
+						_mwm126$ahu$Ahu$avg_thc,
+						{ctor: '_Tuple3', _0: half_t, _1: mix_h, _2: c},
+						_mwm126$ahu$Ahu$sa_thc(model),
+						(2 * _p33) - 1);
+				}
+			}();
+			return {recirc_thc: th_xy, oa_thc: th_xy};
 		default:
-			var _p32 = _p28._0;
-			return {
-				recirc_thc: A3(
-					_mwm126$ahu$Ahu$avg_thc,
-					_mwm126$ahu$Ahu$sa_thc(model),
-					_mwm126$ahu$Ahu$building_thc(model),
-					_p32),
-				oa_thc: A3(
-					_mwm126$ahu$Ahu$avg_thc,
-					_mwm126$ahu$Ahu$sa_thc(model),
-					_mwm126$ahu$Ahu$building_thc(model),
-					_p32),
-				air_location: A3(
-					_mwm126$ahu$Ahu$avg,
-					{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy + _mwm126$ahu$Ahu$duct_height},
-					{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy},
-					_p32),
-				recirc_air_location: A3(
-					_mwm126$ahu$Ahu$avg,
-					{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy + _mwm126$ahu$Ahu$duct_height},
-					{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: yy},
-					_p32),
-				air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$blue, _elm_lang$core$Color$green, _p32),
-				recirc_air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$blue, _elm_lang$core$Color$green, _p32)
-			};
+			var th_xy = A3(
+				_mwm126$ahu$Ahu$avg_thc,
+				_mwm126$ahu$Ahu$sa_thc(model),
+				building,
+				_p28._0);
+			return {recirc_thc: th_xy, oa_thc: th_xy};
 	}
-};
-var _mwm126$ahu$Ahu$house = function (model) {
-	var _p33 = function (_) {
-		return _.recirc_air_location;
-	}(
-		_mwm126$ahu$Ahu$sprite_states(model));
-	var rx = _p33._0;
-	var ry = _p33._1;
-	var _p34 = function (_) {
-		return _.air_location;
-	}(
-		_mwm126$ahu$Ahu$sprite_states(model));
-	var ax = _p34._0;
-	var ay = _p34._1;
-	var yy = _mwm126$ahu$Ahu$house_y;
-	var xx = _mwm126$ahu$AhuUnits$inFahrenheit(_mwm126$ahu$Ahu$house_x);
-	var ww = _mwm126$ahu$Ahu$duct_width;
-	var coil_x = xx + (ww * 0.6);
-	var hh = _mwm126$ahu$Ahu$duct_height;
-	var coil_y = yy + hh;
-	var rr = _mwm126$ahu$Ahu$air_radius;
-	var coil = function (x) {
-		return A2(
-			_elm_lang$svg$Svg$line,
-			{
-				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$x1(
-					_elm_lang$core$Basics$toString(coil_x + x)),
-				_1: {
-					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$y1(
-						_elm_lang$core$Basics$toString(coil_y - rr)),
-					_1: {
-						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$x2(
-							_elm_lang$core$Basics$toString(coil_x + x)),
-						_1: {
-							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$y2(
-								_elm_lang$core$Basics$toString(coil_y)),
-							_1: {
-								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$stroke('blue'),
-								_1: {ctor: '[]'}
-							}
-						}
-					}
-				}
-			},
-			{ctor: '[]'});
-	};
-	var roof_height = 10;
-	var rh = roof_height;
-	var ys = {
-		ctor: '::',
-		_0: 0,
-		_1: {
-			ctor: '::',
-			_0: rh,
-			_1: {
-				ctor: '::',
-				_0: rh,
-				_1: {
-					ctor: '::',
-					_0: 2 * rh,
-					_1: {
-						ctor: '::',
-						_0: 2 * rh,
-						_1: {
-							ctor: '::',
-							_0: rh,
-							_1: {
-								ctor: '::',
-								_0: rh,
-								_1: {ctor: '[]'}
-							}
-						}
-					}
-				}
-			}
-		}
-	};
-	var roof_width = 10;
-	var rw = roof_width;
-	var xs = {
-		ctor: '::',
-		_0: 0,
-		_1: {
-			ctor: '::',
-			_0: rw,
-			_1: {
-				ctor: '::',
-				_0: (2 * rw) / 3,
-				_1: {
-					ctor: '::',
-					_0: (2 * rw) / 3,
-					_1: {
-						ctor: '::',
-						_0: (-2 * rw) / 3,
-						_1: {
-							ctor: '::',
-							_0: (-2 * rw) / 3,
-							_1: {
-								ctor: '::',
-								_0: 0 - rw,
-								_1: {ctor: '[]'}
-							}
-						}
-					}
-				}
-			}
-		}
-	};
-	var house_points = A3(
-		_elm_lang$core$List$map2,
-		F2(
-			function (x, y) {
-				return A2(
-					_elm_lang$core$Basics_ops['++'],
-					_elm_lang$core$Basics$toString(((xx + ww) + rr) + x),
-					A2(
-						_elm_lang$core$Basics_ops['++'],
-						',',
-						_elm_lang$core$Basics$toString((yy + (hh / 3)) + y)));
-			}),
-		xs,
-		ys);
-	return {
-		ctor: '::',
-		_0: A2(
-			_elm_lang$svg$Svg$line,
-			{
-				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$x1(
-					_elm_lang$core$Basics$toString(xx)),
-				_1: {
-					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$y1(
-						_elm_lang$core$Basics$toString(yy)),
-					_1: {
-						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$x2(
-							_elm_lang$core$Basics$toString(xx + ww)),
-						_1: {
-							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$y2(
-								_elm_lang$core$Basics$toString(yy)),
-							_1: {
-								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$stroke('black'),
-								_1: {ctor: '[]'}
-							}
-						}
-					}
-				}
-			},
-			{ctor: '[]'}),
-		_1: {
-			ctor: '::',
-			_0: A2(
-				_elm_lang$svg$Svg$rect,
-				{
-					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$x(
-						_elm_lang$core$Basics$toString(xx)),
-					_1: {
-						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$y(
-							_elm_lang$core$Basics$toString(yy + rr)),
-						_1: {
-							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$width(
-								_elm_lang$core$Basics$toString(2 * rr)),
-							_1: {
-								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$height(
-									_elm_lang$core$Basics$toString(rr)),
-								_1: {
-									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$fill('gray'),
-									_1: {ctor: '[]'}
-								}
-							}
-						}
-					}
-				},
-				{ctor: '[]'}),
-			_1: {
-				ctor: '::',
-				_0: A2(
-					_elm_lang$svg$Svg$rect,
-					{
-						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$x(
-							_elm_lang$core$Basics$toString(xx + (3 * rr))),
-						_1: {
-							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$y(
-								_elm_lang$core$Basics$toString(yy + rr)),
-							_1: {
-								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$width(
-									_elm_lang$core$Basics$toString(ww - (xx + (3 * rr)))),
-								_1: {
-									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$height(
-										_elm_lang$core$Basics$toString(rr)),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$svg$Svg_Attributes$fill('gray'),
-										_1: {ctor: '[]'}
-									}
-								}
-							}
-						}
-					},
-					{ctor: '[]'}),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$svg$Svg$line,
-						{
-							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$x1(
-								_elm_lang$core$Basics$toString(xx)),
-							_1: {
-								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$y1(
-									_elm_lang$core$Basics$toString(yy + hh)),
-								_1: {
-									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$x2(
-										_elm_lang$core$Basics$toString(xx + ww)),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$svg$Svg_Attributes$y2(
-											_elm_lang$core$Basics$toString(yy + hh)),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$svg$Svg_Attributes$stroke('black'),
-											_1: {ctor: '[]'}
-										}
-									}
-								}
-							}
-						},
-						{ctor: '[]'}),
-					_1: {
-						ctor: '::',
-						_0: A2(
-							_elm_lang$svg$Svg$polygon,
-							{
-								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$points(
-									_elm_lang$core$String$concat(
-										A2(_elm_lang$core$List$intersperse, ' ', house_points))),
-								_1: {
-									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$stroke('black'),
-									_1: {ctor: '[]'}
-								}
-							},
-							{ctor: '[]'}),
-						_1: {
-							ctor: '::',
-							_0: coil(10),
-							_1: {
-								ctor: '::',
-								_0: coil(12),
-								_1: {
-									ctor: '::',
-									_0: coil(14),
-									_1: {
-										ctor: '::',
-										_0: coil(16),
-										_1: {
-											ctor: '::',
-											_0: coil(18),
-											_1: {
-												ctor: '::',
-												_0: A2(
-													_elm_lang$svg$Svg$text_,
-													{
-														ctor: '::',
-														_0: _elm_lang$svg$Svg_Attributes$x(
-															_elm_lang$core$Basics$toString(coil_x)),
-														_1: {
-															ctor: '::',
-															_0: _elm_lang$svg$Svg_Attributes$y(
-																_elm_lang$core$Basics$toString(coil_y)),
-															_1: {
-																ctor: '::',
-																_0: _elm_lang$svg$Svg_Attributes$dx('15'),
-																_1: {
-																	ctor: '::',
-																	_0: _elm_lang$svg$Svg_Attributes$dy('15'),
-																	_1: {
-																		ctor: '::',
-																		_0: _elm_lang$svg$Svg_Attributes$fontSize('10'),
-																		_1: {
-																			ctor: '::',
-																			_0: _elm_lang$svg$Svg_Attributes$stroke('blue'),
-																			_1: {ctor: '[]'}
-																		}
-																	}
-																}
-															}
-														}
-													},
-													{
-														ctor: '::',
-														_0: _elm_lang$html$Html$text('coil'),
-														_1: {ctor: '[]'}
-													}),
-												_1: {
-													ctor: '::',
-													_0: A6(
-														_mwm126$ahu$Ahu$pie,
-														ax,
-														ay,
-														10,
-														(1 - (model.oa_p / 100)) - 0.25,
-														0.75,
-														_mwm126$ahu$Ahu$asString(
-															_mwm126$ahu$Ahu$sprite_states(model).recirc_air_color)),
-													_1: {
-														ctor: '::',
-														_0: A6(
-															_mwm126$ahu$Ahu$pie,
-															rx,
-															ry,
-															10,
-															-0.25,
-															(1.0 - (model.oa_p / 100)) - 0.25,
-															_mwm126$ahu$Ahu$asString(
-																_mwm126$ahu$Ahu$sprite_states(model).air_color)),
-														_1: {ctor: '[]'}
-													}
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	};
 };
 var _mwm126$ahu$Ahu$psych_chart = function (model) {
 	var comfort_label = A2(
@@ -18119,27 +17730,27 @@ var _mwm126$ahu$Ahu$psych_chart = function (model) {
 	var some_temperature = 50;
 	var r = 'blue';
 	var make_line = F3(
-		function (c, _p36, _p35) {
-			var _p37 = _p36;
-			var _p38 = _p35;
+		function (c, _p35, _p34) {
+			var _p36 = _p35;
+			var _p37 = _p34;
 			return A2(
 				_elm_lang$svg$Svg$line,
 				{
 					ctor: '::',
 					_0: _elm_lang$svg$Svg_Attributes$x1(
-						_elm_lang$core$Basics$toString(_p37._0)),
+						_elm_lang$core$Basics$toString(_p36._0)),
 					_1: {
 						ctor: '::',
 						_0: _elm_lang$svg$Svg_Attributes$y1(
-							_elm_lang$core$Basics$toString(_p37._1)),
+							_elm_lang$core$Basics$toString(_p36._1)),
 						_1: {
 							ctor: '::',
 							_0: _elm_lang$svg$Svg_Attributes$x2(
-								_elm_lang$core$Basics$toString(_p38._0)),
+								_elm_lang$core$Basics$toString(_p37._0)),
 							_1: {
 								ctor: '::',
 								_0: _elm_lang$svg$Svg_Attributes$y2(
-									_elm_lang$core$Basics$toString(_p38._1)),
+									_elm_lang$core$Basics$toString(_p37._1)),
 								_1: {
 									ctor: '::',
 									_0: _elm_lang$svg$Svg_Attributes$stroke(c),
@@ -18151,23 +17762,23 @@ var _mwm126$ahu$Ahu$psych_chart = function (model) {
 				},
 				{ctor: '[]'});
 		});
-	var p_horiz = function (_p39) {
-		var _p40 = _p39;
-		var _p41 = _p40._1;
+	var p_horiz = function (_p38) {
+		var _p39 = _p38;
+		var _p40 = _p39._1;
 		return A3(
 			make_line,
 			'lightgray',
-			{ctor: '_Tuple2', _0: _p40._0, _1: _p41},
-			{ctor: '_Tuple2', _0: 450, _1: _p41});
+			{ctor: '_Tuple2', _0: _p39._0, _1: _p40},
+			{ctor: '_Tuple2', _0: 450, _1: _p40});
 	};
-	var p_vert = function (_p42) {
-		var _p43 = _p42;
-		var _p44 = _p43._0;
+	var p_vert = function (_p41) {
+		var _p42 = _p41;
+		var _p43 = _p42._0;
 		return A3(
 			make_line,
 			'lightgray',
-			{ctor: '_Tuple2', _0: _p44, _1: _p43._1},
-			{ctor: '_Tuple2', _0: _p44, _1: 370});
+			{ctor: '_Tuple2', _0: _p43, _1: _p42._1},
+			{ctor: '_Tuple2', _0: _p43, _1: 370});
 	};
 	var comfort_zone = {
 		ctor: '::',
@@ -18186,12 +17797,12 @@ var _mwm126$ahu$Ahu$psych_chart = function (model) {
 			}
 		}
 	};
-	var mkTempHr = function (_p45) {
-		var _p46 = _p45;
+	var mkTempHr = function (_p44) {
+		var _p45 = _p44;
 		return {
 			ctor: '_Tuple2',
-			_0: _mwm126$ahu$AhuUnits$Fahrenheit(_p46._0),
-			_1: _mwm126$ahu$AhuUnits$MolecularRatio(_p46._1)
+			_0: _mwm126$ahu$AhuUnits$Fahrenheit(_p45._0),
+			_1: _mwm126$ahu$AhuUnits$MolecularRatio(_p45._1)
 		};
 	};
 	var saturation_line = A2(
@@ -18246,111 +17857,560 @@ var _mwm126$ahu$Ahu$psych_chart = function (model) {
 				}
 			}
 		});
+	var saturation_line_xy = A2(_elm_lang$core$List$map, _mwm126$ahu$Ahu$th_to_xy, saturation_line);
+	var sat_line_points = A3(
+		_elm_lang$core$List$map2,
+		F2(
+			function (v0, v1) {
+				return {ctor: '_Tuple2', _0: v0, _1: v1};
+			}),
+		saturation_line_xy,
+		A2(_elm_lang$core$List$drop, 1, saturation_line_xy));
+	var sat_line_lines = A2(
+		_elm_lang$core$List$map,
+		function (_p46) {
+			var _p47 = _p46;
+			return A3(make_line, 'black', _p47._0, _p47._1);
+		},
+		sat_line_points);
 	return _elm_lang$core$List$concat(
 		{
 			ctor: '::',
-			_0: A2(
-				_elm_lang$core$List$map,
-				p_horiz,
-				A2(_elm_lang$core$List$map, _mwm126$ahu$Ahu$th_to_xy, saturation_line)),
+			_0: A2(_elm_lang$core$List$map, p_horiz, saturation_line_xy),
 			_1: {
 				ctor: '::',
-				_0: A2(
-					_elm_lang$core$List$map,
-					p_vert,
-					A2(_elm_lang$core$List$map, _mwm126$ahu$Ahu$th_to_xy, saturation_line)),
+				_0: A2(_elm_lang$core$List$map, p_vert, saturation_line_xy),
 				_1: {
 					ctor: '::',
-					_0: _elm_lang$core$List$concat(
-						{
-							ctor: '::',
-							_0: A4(
-								_mwm126$ahu$Ahu$air_state,
-								_mwm126$ahu$Ahu$outside_thc(model),
-								'Outside Air (OA)',
-								'5',
-								'5'),
-							_1: {
+					_0: sat_line_lines,
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$core$List$concat(
+							{
 								ctor: '::',
 								_0: A4(
 									_mwm126$ahu$Ahu$air_state,
-									_mwm126$ahu$Ahu$mixed_thc(model),
-									'Mixed Air (MA)',
+									_mwm126$ahu$Ahu$outside_thc(model),
+									'Outside Air (OA)',
 									'5',
 									'5'),
 								_1: {
 									ctor: '::',
 									_0: A4(
 										_mwm126$ahu$Ahu$air_state,
-										_mwm126$ahu$Ahu$building_thc(model),
-										'Return Air (RA)',
+										_mwm126$ahu$Ahu$mixed_thc(model),
+										'Mixed Air (MA)',
 										'5',
 										'5'),
 									_1: {
 										ctor: '::',
 										_0: A4(
 											_mwm126$ahu$Ahu$air_state,
-											_mwm126$ahu$Ahu$sa_thc(model),
-											'Supply Air (SA)',
-											'-90',
+											_mwm126$ahu$Ahu$building_thc(model),
+											'Return Air (RA)',
+											'5',
 											'5'),
 										_1: {
 											ctor: '::',
 											_0: A4(
 												_mwm126$ahu$Ahu$air_state,
-												function (_) {
-													return _.oa_thc;
-												}(
-													_mwm126$ahu$Ahu$sprite_states(model)),
-												'OA',
-												'15',
-												'15'),
+												_mwm126$ahu$Ahu$sa_thc(model),
+												'Supply Air (SA)',
+												'-90',
+												'5'),
 											_1: {
 												ctor: '::',
 												_0: A4(
 													_mwm126$ahu$Ahu$air_state,
 													function (_) {
-														return _.recirc_thc;
+														return _.oa_thc;
 													}(
-														_mwm126$ahu$Ahu$sprite_states(model)),
-													'RA',
+														_mwm126$ahu$Ahu$thc_sprites(model)),
+													'OA',
 													'15',
-													'-5'),
-												_1: {ctor: '[]'}
+													'15'),
+												_1: {
+													ctor: '::',
+													_0: A4(
+														_mwm126$ahu$Ahu$air_state,
+														function (_) {
+															return _.recirc_thc;
+														}(
+															_mwm126$ahu$Ahu$thc_sprites(model)),
+														'RA',
+														'15',
+														'-5'),
+													_1: {ctor: '[]'}
+												}
 											}
 										}
 									}
 								}
-							}
-						}),
-					_1: {
-						ctor: '::',
-						_0: comfort_zone,
+							}),
 						_1: {
 							ctor: '::',
-							_0: {
+							_0: comfort_zone,
+							_1: {
 								ctor: '::',
-								_0: x_axis_label,
-								_1: {
+								_0: {
 									ctor: '::',
-									_0: y_axis_label,
+									_0: x_axis_label,
 									_1: {
 										ctor: '::',
-										_0: comfort_label,
-										_1: {ctor: '[]'}
+										_0: y_axis_label,
+										_1: {
+											ctor: '::',
+											_0: comfort_label,
+											_1: {ctor: '[]'}
+										}
 									}
-								}
-							},
-							_1: {ctor: '[]'}
+								},
+								_1: {ctor: '[]'}
+							}
 						}
 					}
 				}
 			}
 		});
 };
+var _mwm126$ahu$Ahu$pie_sprites = function (model) {
+	var stage = _mwm126$ahu$Ahu$find_stage(model);
+	var rr = _mwm126$ahu$Ahu$air_radius;
+	var yy = _mwm126$ahu$Ahu$house_y;
+	var xx = _mwm126$ahu$AhuUnits$inFahrenheit(_mwm126$ahu$Ahu$house_x);
+	var _p48 = stage;
+	switch (_p48.ctor) {
+		case 'ExitingBuilding':
+			var _p49 = _p48._0;
+			var pie_color = A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$green, _p49);
+			return {
+				air_location: A3(
+					_mwm126$ahu$Ahu$avg,
+					{ctor: '_Tuple2', _0: (xx + _mwm126$ahu$Ahu$duct_width) + rr, _1: yy + rr},
+					{ctor: '_Tuple2', _0: xx, _1: yy + rr},
+					_p49),
+				recirc_air_location: A3(
+					_mwm126$ahu$Ahu$avg,
+					{ctor: '_Tuple2', _0: (xx + _mwm126$ahu$Ahu$duct_width) + rr, _1: yy + rr},
+					{ctor: '_Tuple2', _0: (xx + (_mwm126$ahu$Ahu$duct_width * 0.3)) + rr, _1: yy + rr},
+					_p49),
+				air_color: pie_color,
+				recirc_air_color: pie_color
+			};
+		case 'MixingIntake':
+			var _p50 = _p48._0;
+			return {
+				air_location: A3(
+					_mwm126$ahu$Ahu$avg,
+					{ctor: '_Tuple2', _0: xx - rr, _1: yy + rr},
+					{ctor: '_Tuple2', _0: xx - rr, _1: (yy + _mwm126$ahu$Ahu$duct_height) - rr},
+					_p50),
+				recirc_air_location: A3(
+					_mwm126$ahu$Ahu$avg,
+					{ctor: '_Tuple2', _0: (xx + (_mwm126$ahu$Ahu$duct_width * 0.3)) - rr, _1: yy + rr},
+					{ctor: '_Tuple2', _0: (xx + (_mwm126$ahu$Ahu$duct_width * 0.3)) - rr, _1: (yy + _mwm126$ahu$Ahu$duct_height) - rr},
+					_p50),
+				air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$green, _p50),
+				recirc_air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$red, _p50)
+			};
+		case 'EnteringCooling':
+			var _p51 = _p48._0;
+			var pie_color = A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$green, _p51);
+			return {
+				air_location: A3(
+					_mwm126$ahu$Ahu$avg,
+					{ctor: '_Tuple2', _0: xx, _1: (yy + _mwm126$ahu$Ahu$duct_height) - rr},
+					{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: (yy + _mwm126$ahu$Ahu$duct_height) - rr},
+					_p51),
+				recirc_air_location: A3(
+					_mwm126$ahu$Ahu$avg,
+					{ctor: '_Tuple2', _0: xx + (_mwm126$ahu$Ahu$duct_width * 0.3), _1: (yy + _mwm126$ahu$Ahu$duct_height) - rr},
+					{ctor: '_Tuple2', _0: xx + _mwm126$ahu$Ahu$duct_width, _1: (yy + _mwm126$ahu$Ahu$duct_height) - rr},
+					_p51),
+				air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$yellow, _elm_lang$core$Color$blue, _p51),
+				recirc_air_color: A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$green, _elm_lang$core$Color$green, _p51)
+			};
+		default:
+			var _p52 = _p48._0;
+			var pie_color = A3(_mwm126$ahu$Ahu$avg_color, _elm_lang$core$Color$blue, _elm_lang$core$Color$green, _p52);
+			var pie_xy = A3(
+				_mwm126$ahu$Ahu$avg,
+				{ctor: '_Tuple2', _0: (xx + _mwm126$ahu$Ahu$duct_width) + rr, _1: (yy + _mwm126$ahu$Ahu$duct_height) - rr},
+				{ctor: '_Tuple2', _0: (xx + _mwm126$ahu$Ahu$duct_width) + rr, _1: yy + rr},
+				_p52);
+			return {air_location: pie_xy, recirc_air_location: pie_xy, air_color: pie_color, recirc_air_color: pie_color};
+	}
+};
+var _mwm126$ahu$Ahu$duct = function (model) {
+	var _p53 = function (_) {
+		return _.recirc_air_location;
+	}(
+		_mwm126$ahu$Ahu$pie_sprites(model));
+	var rx = _p53._0;
+	var ry = _p53._1;
+	var _p54 = function (_) {
+		return _.air_location;
+	}(
+		_mwm126$ahu$Ahu$pie_sprites(model));
+	var ax = _p54._0;
+	var ay = _p54._1;
+	var yy = _mwm126$ahu$Ahu$house_y;
+	var xx = _mwm126$ahu$AhuUnits$inFahrenheit(_mwm126$ahu$Ahu$house_x);
+	var hx = _elm_lang$core$Basics$toString(_mwm126$ahu$Ahu$duct_width + xx);
+	var ww = _mwm126$ahu$Ahu$duct_width;
+	var coil_x = xx + (ww * 0.6);
+	var hh = _mwm126$ahu$Ahu$duct_height;
+	var dd = 2 * _mwm126$ahu$Ahu$air_radius;
+	var rr = _mwm126$ahu$Ahu$air_radius;
+	var hy = _elm_lang$core$Basics$toString(rr + yy);
+	var house_side = _elm_lang$core$Basics$toString(5 * rr);
+	var house = A2(
+		_elm_lang$svg$Svg$image,
+		{
+			ctor: '::',
+			_0: _elm_lang$svg$Svg_Attributes$xlinkHref('/home-512.png'),
+			_1: {
+				ctor: '::',
+				_0: _elm_lang$svg$Svg_Attributes$x(hx),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$y(hy),
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$width(house_side),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$height(house_side),
+							_1: {ctor: '[]'}
+						}
+					}
+				}
+			}
+		},
+		{ctor: '[]'});
+	var coil_y = (yy + hh) - rr;
+	var coil = function (x) {
+		return A2(
+			_elm_lang$svg$Svg$line,
+			{
+				ctor: '::',
+				_0: _elm_lang$svg$Svg_Attributes$x1(
+					_elm_lang$core$Basics$toString(coil_x + x)),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$y1(
+						_elm_lang$core$Basics$toString(coil_y - rr)),
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$x2(
+							_elm_lang$core$Basics$toString(coil_x + x)),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$y2(
+								_elm_lang$core$Basics$toString(coil_y + rr)),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$svg$Svg_Attributes$stroke('blue'),
+								_1: {ctor: '[]'}
+							}
+						}
+					}
+				}
+			},
+			{ctor: '[]'});
+	};
+	return {
+		ctor: '::',
+		_0: A2(
+			_elm_lang$svg$Svg$line,
+			{
+				ctor: '::',
+				_0: _elm_lang$svg$Svg_Attributes$x1(
+					_elm_lang$core$Basics$toString(xx)),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$y1(
+						_elm_lang$core$Basics$toString(yy)),
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$x2(
+							_elm_lang$core$Basics$toString(xx + ww)),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$y2(
+								_elm_lang$core$Basics$toString(yy)),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$svg$Svg_Attributes$stroke('black'),
+								_1: {ctor: '[]'}
+							}
+						}
+					}
+				}
+			},
+			{ctor: '[]'}),
+		_1: {
+			ctor: '::',
+			_0: A2(
+				_elm_lang$svg$Svg$rect,
+				{
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$x(
+						_elm_lang$core$Basics$toString(xx)),
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$y(
+							_elm_lang$core$Basics$toString(yy + dd)),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$width(
+								_elm_lang$core$Basics$toString(dd)),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$svg$Svg_Attributes$height(
+									_elm_lang$core$Basics$toString(dd)),
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$svg$Svg_Attributes$fill('gray'),
+									_1: {ctor: '[]'}
+								}
+							}
+						}
+					}
+				},
+				{ctor: '[]'}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$svg$Svg$rect,
+					{
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$x(
+							_elm_lang$core$Basics$toString(xx + (2 * dd))),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$y(
+								_elm_lang$core$Basics$toString(yy + dd)),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$svg$Svg_Attributes$width(
+									_elm_lang$core$Basics$toString(ww - (2 * dd))),
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$svg$Svg_Attributes$height(
+										_elm_lang$core$Basics$toString(dd)),
+									_1: {
+										ctor: '::',
+										_0: _elm_lang$svg$Svg_Attributes$fill('gray'),
+										_1: {ctor: '[]'}
+									}
+								}
+							}
+						}
+					},
+					{ctor: '[]'}),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$svg$Svg$line,
+						{
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$x1(
+								_elm_lang$core$Basics$toString(xx)),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$svg$Svg_Attributes$y1(
+									_elm_lang$core$Basics$toString(yy + hh)),
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$svg$Svg_Attributes$x2(
+										_elm_lang$core$Basics$toString(xx + ww)),
+									_1: {
+										ctor: '::',
+										_0: _elm_lang$svg$Svg_Attributes$y2(
+											_elm_lang$core$Basics$toString(yy + hh)),
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$svg$Svg_Attributes$stroke('black'),
+											_1: {ctor: '[]'}
+										}
+									}
+								}
+							}
+						},
+						{ctor: '[]'}),
+					_1: {
+						ctor: '::',
+						_0: house,
+						_1: {
+							ctor: '::',
+							_0: coil(10),
+							_1: {
+								ctor: '::',
+								_0: coil(14),
+								_1: {
+									ctor: '::',
+									_0: coil(18),
+									_1: {
+										ctor: '::',
+										_0: coil(22),
+										_1: {
+											ctor: '::',
+											_0: coil(26),
+											_1: {
+												ctor: '::',
+												_0: A2(
+													_elm_lang$svg$Svg$text_,
+													{
+														ctor: '::',
+														_0: _elm_lang$svg$Svg_Attributes$x(
+															_elm_lang$core$Basics$toString(coil_x)),
+														_1: {
+															ctor: '::',
+															_0: _elm_lang$svg$Svg_Attributes$y(
+																_elm_lang$core$Basics$toString(coil_y)),
+															_1: {
+																ctor: '::',
+																_0: _elm_lang$svg$Svg_Attributes$dx('15'),
+																_1: {
+																	ctor: '::',
+																	_0: _elm_lang$svg$Svg_Attributes$dy('25'),
+																	_1: {
+																		ctor: '::',
+																		_0: _elm_lang$svg$Svg_Attributes$fontSize('10'),
+																		_1: {
+																			ctor: '::',
+																			_0: _elm_lang$svg$Svg_Attributes$stroke('blue'),
+																			_1: {ctor: '[]'}
+																		}
+																	}
+																}
+															}
+														}
+													},
+													{
+														ctor: '::',
+														_0: _elm_lang$html$Html$text('coil'),
+														_1: {ctor: '[]'}
+													}),
+												_1: {
+													ctor: '::',
+													_0: A2(
+														_elm_lang$svg$Svg$text_,
+														{
+															ctor: '::',
+															_0: _elm_lang$svg$Svg_Attributes$x(
+																_elm_lang$core$Basics$toString(xx)),
+															_1: {
+																ctor: '::',
+																_0: _elm_lang$svg$Svg_Attributes$y(
+																	_elm_lang$core$Basics$toString(yy)),
+																_1: {
+																	ctor: '::',
+																	_0: _elm_lang$svg$Svg_Attributes$dx('-10'),
+																	_1: {
+																		ctor: '::',
+																		_0: _elm_lang$svg$Svg_Attributes$dy('5'),
+																		_1: {
+																			ctor: '::',
+																			_0: _elm_lang$svg$Svg_Attributes$fontSize('10'),
+																			_1: {
+																				ctor: '::',
+																				_0: _elm_lang$svg$Svg_Attributes$writingMode('tb'),
+																				_1: {
+																					ctor: '::',
+																					_0: _elm_lang$svg$Svg_Attributes$stroke('lightgray'),
+																					_1: {ctor: '[]'}
+																				}
+																			}
+																		}
+																	}
+																}
+															}
+														},
+														{
+															ctor: '::',
+															_0: _elm_lang$html$Html$text('outside'),
+															_1: {ctor: '[]'}
+														}),
+													_1: {
+														ctor: '::',
+														_0: A2(
+															_elm_lang$svg$Svg$text_,
+															{
+																ctor: '::',
+																_0: _elm_lang$svg$Svg_Attributes$x(
+																	_elm_lang$core$Basics$toString(xx + _mwm126$ahu$Ahu$duct_width)),
+																_1: {
+																	ctor: '::',
+																	_0: _elm_lang$svg$Svg_Attributes$y(
+																		_elm_lang$core$Basics$toString(yy)),
+																	_1: {
+																		ctor: '::',
+																		_0: _elm_lang$svg$Svg_Attributes$dx('10'),
+																		_1: {
+																			ctor: '::',
+																			_0: _elm_lang$svg$Svg_Attributes$dy('0'),
+																			_1: {
+																				ctor: '::',
+																				_0: _elm_lang$svg$Svg_Attributes$fontSize('10'),
+																				_1: {
+																					ctor: '::',
+																					_0: _elm_lang$svg$Svg_Attributes$stroke('lightgray'),
+																					_1: {ctor: '[]'}
+																				}
+																			}
+																		}
+																	}
+																}
+															},
+															{
+																ctor: '::',
+																_0: _elm_lang$html$Html$text('inside'),
+																_1: {ctor: '[]'}
+															}),
+														_1: {
+															ctor: '::',
+															_0: A6(
+																_mwm126$ahu$Ahu$pie,
+																ax,
+																ay,
+																10,
+																(1 - (model.oa_p / 100)) - 0.25,
+																0.75,
+																_mwm126$ahu$Ahu$asString(
+																	_mwm126$ahu$Ahu$pie_sprites(model).recirc_air_color)),
+															_1: {
+																ctor: '::',
+																_0: A6(
+																	_mwm126$ahu$Ahu$pie,
+																	rx,
+																	ry,
+																	10,
+																	-0.25,
+																	(1.0 - (model.oa_p / 100)) - 0.25,
+																	_mwm126$ahu$Ahu$asString(
+																		_mwm126$ahu$Ahu$pie_sprites(model).air_color)),
+																_1: {ctor: '[]'}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	};
+};
 var _mwm126$ahu$Ahu$ahusim = function (model) {
-	var _p47 = model.building_air.rh;
-	var building_rh = _p47._0;
+	var _p55 = model.building_air.rh;
+	var building_rh = _p55._0;
 	var building_t = _mwm126$ahu$AhuUnits$inFahrenheit(model.building_air.t);
 	var shf_in = _mwm126$ahu$AhuModel$supply_shf(model);
 	var q_sens = _mwm126$ahu$AhuUnits$inTons(
@@ -18523,7 +18583,7 @@ var _mwm126$ahu$Ahu$ahusim = function (model) {
 														model,
 														_mwm126$ahu$Ahu$SetShf,
 														{ctor: '_Tuple2', _0: 40.0, _1: 100.0},
-														function (_p48) {
+														function (_p56) {
 															return A2(
 																F2(
 																	function (x, y) {
@@ -18532,7 +18592,7 @@ var _mwm126$ahu$Ahu$ahusim = function (model) {
 																100,
 																function (_) {
 																	return _.load_shf;
-																}(_p48));
+																}(_p56));
 														},
 														A2(
 															_elm_lang$core$Basics_ops['++'],
@@ -18660,7 +18720,7 @@ var _mwm126$ahu$Ahu$ahusim = function (model) {
 									_0: A3(_mwm126$ahu$Ahu$protractor, pro_x, pro_y, model),
 									_1: {
 										ctor: '::',
-										_0: _mwm126$ahu$Ahu$house(model),
+										_0: _mwm126$ahu$Ahu$duct(model),
 										_1: {
 											ctor: '::',
 											_0: _mwm126$ahu$Ahu$psych_chart(model),
@@ -18709,22 +18769,18 @@ var _mwm126$ahu$Ahu$view = function (model) {
 					},
 					{
 						ctor: '::',
-						_0: _debois$elm_mdl$Material_Icon$i('simulation'),
+						_0: A2(
+							_debois$elm_mdl$Material_Options$span,
+							{
+								ctor: '::',
+								_0: A2(_debois$elm_mdl$Material_Options$css, 'width', '0px'),
+								_1: {ctor: '[]'}
+							},
+							{ctor: '[]'}),
 						_1: {
 							ctor: '::',
-							_0: A2(
-								_debois$elm_mdl$Material_Options$span,
-								{
-									ctor: '::',
-									_0: A2(_debois$elm_mdl$Material_Options$css, 'width', '4px'),
-									_1: {ctor: '[]'}
-								},
-								{ctor: '[]'}),
-							_1: {
-								ctor: '::',
-								_0: _elm_lang$html$Html$text('Simulation'),
-								_1: {ctor: '[]'}
-							}
+							_0: _elm_lang$html$Html$text('Simulation'),
+							_1: {ctor: '[]'}
 						}
 					}),
 				_1: {
@@ -18738,22 +18794,18 @@ var _mwm126$ahu$Ahu$view = function (model) {
 						},
 						{
 							ctor: '::',
-							_0: _debois$elm_mdl$Material_Icon$i('instructions'),
+							_0: A2(
+								_debois$elm_mdl$Material_Options$span,
+								{
+									ctor: '::',
+									_0: A2(_debois$elm_mdl$Material_Options$css, 'width', '4px'),
+									_1: {ctor: '[]'}
+								},
+								{ctor: '[]'}),
 							_1: {
 								ctor: '::',
-								_0: A2(
-									_debois$elm_mdl$Material_Options$span,
-									{
-										ctor: '::',
-										_0: A2(_debois$elm_mdl$Material_Options$css, 'width', '4px'),
-										_1: {ctor: '[]'}
-									},
-									{ctor: '[]'}),
-								_1: {
-									ctor: '::',
-									_0: _elm_lang$html$Html$text('Instructions'),
-									_1: {ctor: '[]'}
-								}
+								_0: _elm_lang$html$Html$text('Instructions'),
+								_1: {ctor: '[]'}
 							}
 						}),
 					_1: {
@@ -18767,22 +18819,18 @@ var _mwm126$ahu$Ahu$view = function (model) {
 							},
 							{
 								ctor: '::',
-								_0: _debois$elm_mdl$Material_Icon$i('source'),
+								_0: A2(
+									_debois$elm_mdl$Material_Options$span,
+									{
+										ctor: '::',
+										_0: A2(_debois$elm_mdl$Material_Options$css, 'width', '4px'),
+										_1: {ctor: '[]'}
+									},
+									{ctor: '[]'}),
 								_1: {
 									ctor: '::',
-									_0: A2(
-										_debois$elm_mdl$Material_Options$span,
-										{
-											ctor: '::',
-											_0: A2(_debois$elm_mdl$Material_Options$css, 'width', '4px'),
-											_1: {ctor: '[]'}
-										},
-										{ctor: '[]'}),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$html$Html$text('Source'),
-										_1: {ctor: '[]'}
-									}
+									_0: _elm_lang$html$Html$text('Source'),
+									_1: {ctor: '[]'}
 								}
 							}),
 						_1: {
@@ -18796,22 +18844,18 @@ var _mwm126$ahu$Ahu$view = function (model) {
 								},
 								{
 									ctor: '::',
-									_0: _debois$elm_mdl$Material_Icon$i('publication'),
+									_0: A2(
+										_debois$elm_mdl$Material_Options$span,
+										{
+											ctor: '::',
+											_0: A2(_debois$elm_mdl$Material_Options$css, 'width', '4px'),
+											_1: {ctor: '[]'}
+										},
+										{ctor: '[]'}),
 									_1: {
 										ctor: '::',
-										_0: A2(
-											_debois$elm_mdl$Material_Options$span,
-											{
-												ctor: '::',
-												_0: A2(_debois$elm_mdl$Material_Options$css, 'width', '4px'),
-												_1: {ctor: '[]'}
-											},
-											{ctor: '[]'}),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$html$Html$text('Publication'),
-											_1: {ctor: '[]'}
-										}
+										_0: _elm_lang$html$Html$text('Publication'),
+										_1: {ctor: '[]'}
 									}
 								}),
 							_1: {ctor: '[]'}
@@ -18843,8 +18887,8 @@ var _mwm126$ahu$Ahu$view = function (model) {
 					{
 						ctor: '::',
 						_0: function () {
-							var _p49 = model.tab;
-							switch (_p49) {
+							var _p57 = model.tab;
+							switch (_p57) {
 								case 0:
 									return _mwm126$ahu$Ahu$ahusim(model);
 								case 1:
